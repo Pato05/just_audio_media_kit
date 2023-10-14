@@ -1,0 +1,38 @@
+name: just_audio_media_kit
+description: A new Flutter package project.
+version: 0.0.1
+homepage:
+
+environment:
+  sdk: '>=3.1.3 <4.0.0'
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  media_kit: ^1.1.8+2
+  media_kit_libs_windows_audio: ^1.0.9
+  media_kit_libs_linux: ^1.1.3
+  just_audio_platform_interface: ^4.2.1
+  logging: ^1.2.0
+  media_kit_native_event_loop: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter packages.
+flutter:
+  plugin:
+    implements: just_audio_platform_interface
+    platforms:
+      windows:
+        dartPluginClass: JustAudioMediaKit
+        fileName: just_audio_media_kit.dart
+      linux:
+        dartPluginClass: JustAudioMediaKit
+        fileName: just_audio_media_kit.dart
