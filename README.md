@@ -6,6 +6,12 @@
 
 Just include this package into your flutter/dart app, and use `just_audio` as normal.
 
+```bash
+flutter pub add just_audio_media_kit
+```
+
+or you can use the git version
+
 `pubspec.yaml`:
 ```yaml
 dependencies:
