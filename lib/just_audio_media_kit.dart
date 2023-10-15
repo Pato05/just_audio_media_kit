@@ -7,6 +7,7 @@ import 'package:logging/logging.dart';
 import 'package:media_kit/media_kit.dart';
 
 class JustAudioMediaKit extends JustAudioPlatform {
+  static MPVLogLevel mpvLogLevel = MPVLogLevel.error;
   static final _logger = Logger('MediaKitPlayer');
   final Map<String, MediaKitPlayer> players = {};
 
@@ -24,9 +25,9 @@ class JustAudioMediaKit extends JustAudioPlatform {
     }
 
     _logger.fine('instantiating new player ${request.id}');
-    final _player = MediaKitPlayer(request.id);
-    await _player.isReady;
-    return players[request.id] = _player;
+    final player = MediaKitPlayer(request.id);
+    await player.isReady;
+    return players[request.id] = player;
   }
 
   @override
