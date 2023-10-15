@@ -34,27 +34,27 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     _streamSubscriptions = [
       _player.stream.duration.listen((duration) {
         _processingState = ProcessingStateMessage.ready;
-        updatePlaybackEvent(duration: duration);
+        _updatePlaybackEvent(duration: duration);
       }),
       _player.stream.position.listen((position) {
         _position = position;
-        updatePlaybackEvent();
+        _updatePlaybackEvent();
       }),
       _player.stream.buffering.listen((isBuffering) {
         _logger.fine('isBuffering: $isBuffering');
         _processingState = isBuffering
             ? ProcessingStateMessage.buffering
             : ProcessingStateMessage.ready;
-        updatePlaybackEvent();
+        _updatePlaybackEvent();
       }),
       _player.stream.buffer.listen((buffer) {
         _bufferedPosition = buffer;
-        updatePlaybackEvent();
+        _updatePlaybackEvent();
       }),
       _player.stream.playing.listen((playing) {
         _processingState = ProcessingStateMessage.ready;
         _dataController.add(PlayerDataMessage(playing: playing));
-        updatePlaybackEvent();
+        _updatePlaybackEvent();
       }),
       _player.stream.volume.listen((volume) {
         _dataController.add(PlayerDataMessage(volume: volume / 100.0));
@@ -63,16 +63,16 @@ class MediaKitPlayer extends AudioPlayerPlatform {
         _processingState = completed
             ? ProcessingStateMessage.completed
             : ProcessingStateMessage.ready;
-        updatePlaybackEvent();
+        _updatePlaybackEvent();
       }),
       _player.stream.error.listen((error) {
         _processingState = ProcessingStateMessage.idle;
-        updatePlaybackEvent();
+        _updatePlaybackEvent();
         _logger.severe('ERROR OCCURRED: $error');
       }),
       _player.stream.playlist.listen((playlist) {
         _currentIndex = playlist.index;
-        updatePlaybackEvent();
+        _updatePlaybackEvent();
       }),
       _player.stream.pitch.listen((pitch) {
         _dataController.add(PlayerDataMessage(pitch: pitch));
@@ -94,7 +94,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   Stream<PlayerDataMessage> get playerDataMessageStream =>
       _dataController.stream;
 
-  void updatePlaybackEvent(
+  void _updatePlaybackEvent(
       {Duration? duration, IcyMetadataMessage? icyMetadata}) {
     _eventController.add(PlaybackEventMessage(
       processingState: _processingState,
@@ -111,11 +111,15 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   @override
   Future<LoadResponse> load(LoadRequest request) async {
     _logger.fine('load(${request.toMap()})');
+    _bufferedPosition = Duration.zero;
+    _position = Duration.zero;
+    _currentIndex = 0;
     if (request.audioSourceMessage is ConcatenatingAudioSourceMessage) {
       final as = request.audioSourceMessage as ConcatenatingAudioSourceMessage;
+      _currentIndex = request.initialIndex ?? 0;
       final playable = Playlist(
           as.children.map(_convertAudioSourceIntoMediaKit).toList(),
-          index: request.initialIndex ?? 0);
+          index: _currentIndex);
 
       await _player.open(playable);
     } else {
@@ -126,9 +130,11 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     }
 
     if (request.initialPosition != null) {
+      _position = request.initialPosition!;
       await _player.seek(request.initialPosition!);
     }
 
+    _updatePlaybackEvent();
     return LoadResponse(duration: _player.state.duration);
   }
 
@@ -190,6 +196,8 @@ class MediaKitPlayer extends AudioPlayerPlatform {
       await _player.jump(request.index!);
     }
 
+    _bufferedPosition = Duration.zero;
+
     if (request.position != null) {
       _position = request.position!;
       await _player.seek(request.position!);
@@ -198,7 +206,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     }
 
     // reset position on seek
-    updatePlaybackEvent();
+    _updatePlaybackEvent();
     return SeekResponse();
   }
 

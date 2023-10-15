@@ -9,7 +9,7 @@ import 'package:media_kit/media_kit.dart';
 class JustAudioMediaKit extends JustAudioPlatform {
   static MPVLogLevel mpvLogLevel = MPVLogLevel.error;
   static final _logger = Logger('MediaKitPlayer');
-  final Map<String, MediaKitPlayer> players = {};
+  final Map<String, MediaKitPlayer> _players = {};
 
   static void registerWith() {
     JustAudioPlatform.instance = JustAudioMediaKit();
@@ -19,7 +19,7 @@ class JustAudioMediaKit extends JustAudioPlatform {
   Future<AudioPlayerPlatform> init(InitRequest request) async {
     MediaKit.ensureInitialized();
 
-    if (players.containsKey(request.id)) {
+    if (_players.containsKey(request.id)) {
       throw PlatformException(
           code: 'error', message: 'Player ${request.id} already exists!');
     }
@@ -27,13 +27,13 @@ class JustAudioMediaKit extends JustAudioPlatform {
     _logger.fine('instantiating new player ${request.id}');
     final player = MediaKitPlayer(request.id);
     await player.isReady;
-    return players[request.id] = player;
+    return _players[request.id] = player;
   }
 
   @override
   Future<DisposePlayerResponse> disposePlayer(DisposePlayerRequest request) {
     _logger.fine('disposing player ${request.id}');
-    return players
+    return _players
         .remove(request.id)!
         .release()
         .then((_) => DisposePlayerResponse());
@@ -43,8 +43,8 @@ class JustAudioMediaKit extends JustAudioPlatform {
   Future<DisposeAllPlayersResponse> disposeAllPlayers(
       DisposeAllPlayersRequest request) async {
     _logger.fine('disposing of all players...');
-    await Future.wait(players.values.map((e) => e.release()));
-    players.clear();
+    await Future.wait(_players.values.map((e) => e.release()));
+    _players.clear();
     return DisposeAllPlayersResponse();
   }
 }
