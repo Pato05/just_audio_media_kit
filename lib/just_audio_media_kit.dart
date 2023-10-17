@@ -26,17 +26,17 @@ class JustAudioMediaKit extends JustAudioPlatform {
 
     _logger.fine('instantiating new player ${request.id}');
     final player = MediaKitPlayer(request.id);
+    _players[request.id] = player;
     await player.isReady;
-    return _players[request.id] = player;
+    return player;
   }
 
   @override
-  Future<DisposePlayerResponse> disposePlayer(DisposePlayerRequest request) {
+  Future<DisposePlayerResponse> disposePlayer(
+      DisposePlayerRequest request) async {
     _logger.fine('disposing player ${request.id}');
-    return _players
-        .remove(request.id)!
-        .release()
-        .then((_) => DisposePlayerResponse());
+    await _players.remove(request.id)?.release();
+    return DisposePlayerResponse();
   }
 
   @override

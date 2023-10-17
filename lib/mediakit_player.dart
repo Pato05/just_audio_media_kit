@@ -111,12 +111,12 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   @override
   Future<LoadResponse> load(LoadRequest request) async {
     _logger.fine('load(${request.toMap()})');
+    _currentIndex = request.initialIndex ?? 0;
     _bufferedPosition = Duration.zero;
     _position = Duration.zero;
-    _currentIndex = 0;
+
     if (request.audioSourceMessage is ConcatenatingAudioSourceMessage) {
       final as = request.audioSourceMessage as ConcatenatingAudioSourceMessage;
-      _currentIndex = request.initialIndex ?? 0;
       final playable = Playlist(
           as.children.map(_convertAudioSourceIntoMediaKit).toList(),
           index: _currentIndex);
@@ -196,8 +196,6 @@ class MediaKitPlayer extends AudioPlayerPlatform {
       await _player.jump(request.index!);
     }
 
-    _bufferedPosition = Duration.zero;
-
     if (request.position != null) {
       _position = request.position!;
       await _player.seek(request.position!);
@@ -250,7 +248,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     await _player.dispose();
 
     // cancel all stream subscriptions
-    for (final subscription in _streamSubscriptions) {
+    for (final StreamSubscription subscription in _streamSubscriptions) {
       await subscription.cancel();
     }
   }
