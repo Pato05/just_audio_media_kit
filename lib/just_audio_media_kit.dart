@@ -7,8 +7,29 @@ import 'package:logging/logging.dart';
 import 'package:media_kit/media_kit.dart';
 
 class JustAudioMediaKit extends JustAudioPlatform {
+  /// The internal MPV player's logLevel
   static MPVLogLevel mpvLogLevel = MPVLogLevel.error;
-  static final _logger = Logger('MediaKitPlayer');
+
+  /// Sets the demuxer's cache size (in bytes)
+  static int bufferSize = 32 * 1024 * 1024;
+
+  /// Sets the name of the underlying window & process for native backend. This is visible inside the Windows' volume mixer.
+  static String title = 'JustAudioMediaKit';
+
+  /// Sets the list of allowed protocols for native backend.
+  static List<String> protocolWhitelist = const [
+    'udp',
+    'rtp',
+    'tcp',
+    'tls',
+    'data',
+    'file',
+    'http',
+    'https',
+    'crypto',
+  ];
+
+  static final _logger = Logger('JustAudioMediaKit');
   final Map<String, MediaKitPlayer> _players = {};
 
   static void registerWith() {

@@ -12,21 +12,41 @@ flutter pub add just_audio_media_kit
 
 or you can use the git version
 
-`pubspec.yaml`:
 ```yaml
-dependencies:
-    ...
-    just_audio_media_kit:
-        git:
-            url: https://github.com/Pato05/just_audio_media_kit.git
+just_audio_media_kit:
+    git:
+        url: https://github.com/Pato05/just_audio_media_kit.git
 ```
 
-## Plugin-specific configuration
+## Plugin-specific configuration (settings for `media_kit`'s `Player()` instance)
 
-Set MPV's log level (by default it's set to `MPVLogLevel.error`):
+**NOTE**: these must be set <u>before</u> the player initializes or they won't work!
+
+
+Set MPV's log level. Default: `MPVLogLevel.error`
 
 ```dart
 JustAudioMediaKit.mpvLogLevel = MPVLogLevel.debug;
+```
+
+Sets the demuxer's cache size (in bytes). Default: `32 * 1024 * 1204` (32 MB)
+
+```dart
+JustAudioMediaKit.bufferSize = 8 * 1024 * 1024; // 8 MB
+```
+
+Sets the name of the underlying window and process for native backend. This is visible, for example, inside the Windows' volume mixer or also in `pavucontrol` on Linux. Default: `'JustAudioMediaKit'`
+
+```dart
+JustAudioMediaKit.title = 'My Audio Player App';
+```
+
+Sets the list of allowed protocols for native backend. Default: `['udp', 'rtp', 'tcp', 'tls', 'data', 'file', 'http', 'https', 'crypto']`
+
+**IF YOU EDIT THIS OPTION**: Remember that `file` is needed for playing local files, `https` and `http` are needed to play from URLs and `http` to play from a `StreamAudioSource` (and sources that implement it, like `LockCachingAudioSource`).
+
+```dart
+JustAudioMediaKit.protocolWhitelist = const ['http', 'https'];
 ```
 
 ## Features

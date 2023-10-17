@@ -25,7 +25,9 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   MediaKitPlayer(super.id) {
     _player = Player(
         configuration: PlayerConfiguration(
-      title: 'JustAudioMediaKit',
+      protocolWhitelist: JustAudioMediaKit.protocolWhitelist,
+      title: JustAudioMediaKit.title,
+      bufferSize: JustAudioMediaKit.bufferSize,
       logLevel: JustAudioMediaKit.mpvLogLevel,
       ready: () => _readyCompleter.complete(),
     ));
