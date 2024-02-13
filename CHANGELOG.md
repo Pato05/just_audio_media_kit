@@ -1,3 +1,9 @@
+## 2.0.0
+- **BREAKING: Removed hard dependencies** (Read the installation steps in README to comply!)
+- Fix queue insert with index
+- Fix moving items in ConcatenatingAudioSource
+
+
 ## 1.0.0
 
 - Make private methods private, as they should've been

@@ -1,6 +1,5 @@
 library just_audio_media_kit;
 
-import 'package:flutter/services.dart';
 import 'package:just_audio_media_kit/mediakit_player.dart';
 import 'package:just_audio_platform_interface/just_audio_platform_interface.dart';
 import 'package:logging/logging.dart';
@@ -63,8 +62,9 @@ class JustAudioMediaKit extends JustAudioPlatform {
     MediaKit.ensureInitialized();
 
     if (_players.containsKey(request.id)) {
-      throw PlatformException(
-          code: 'error', message: 'Player ${request.id} already exists!');
+      //throw PlatformException(
+      //    code: 'error', message: 'Player ${request.id} already exists!');
+      return _players[request.id]!;
     }
 
     _logger.fine('instantiating new player ${request.id}');

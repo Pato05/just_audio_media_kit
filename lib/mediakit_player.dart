@@ -32,7 +32,6 @@ class MediaKitPlayer extends AudioPlayerPlatform {
       ready: () => _readyCompleter.complete(),
     ));
 
-    // store subscriptions to cancel later
     _streamSubscriptions = [
       _player.stream.duration.listen((duration) {
         _processingState = ProcessingStateMessage.ready;
@@ -43,7 +42,6 @@ class MediaKitPlayer extends AudioPlayerPlatform {
         _updatePlaybackEvent();
       }),
       _player.stream.buffering.listen((isBuffering) {
-        _logger.fine('isBuffering: $isBuffering');
         _processingState = isBuffering
             ? ProcessingStateMessage.buffering
             : ProcessingStateMessage.ready;
@@ -211,7 +209,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   @override
   Future<ConcatenatingInsertAllResponse> concatenatingInsertAll(
       ConcatenatingInsertAllRequest request) async {
-    _logger.fine('concatenatingInsertAll(${request.toMap()})');
+    // _logger.fine('concatenatingInsertAll(${request.toMap()})');
     for (final source in request.children) {
       await _player.add(_convertAudioSourceIntoMediaKit(source));
 
@@ -220,7 +218,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
       if (length == 0 || length == 1) continue;
 
       if (request.index < (length - 1) && request.index >= 0) {
-        await _player.move(length - 1, request.index);
+        await _player.move(length, request.index);
       }
     }
 
@@ -240,20 +238,24 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   @override
   Future<ConcatenatingMoveResponse> concatenatingMove(
       ConcatenatingMoveRequest request) {
-    _logger.fine('concatenatingMove(${request.toMap()})');
-
     return _player
-        .move(request.currentIndex, request.newIndex)
+        .move(
+            request.currentIndex,
+            // not sure why, but apparently there's an underlying difference between just_audio's move implementation
+            // and media_kit, so let's fix it
+            request.currentIndex > request.newIndex
+                ? request.newIndex
+                : request.newIndex + 1)
         .then((_) => ConcatenatingMoveResponse());
   }
 
   Future<void> release() async {
     _logger.info('releasing player resources');
-    await _player.dispose();
-
     // cancel all stream subscriptions
     for (final StreamSubscription subscription in _streamSubscriptions) {
       await subscription.cancel();
     }
+    _streamSubscriptions.clear();
+    await _player.dispose();
   }
 }
