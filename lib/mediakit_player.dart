@@ -10,7 +10,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   late final List<StreamSubscription> _streamSubscriptions;
 
   final _readyCompleter = Completer<void>();
-  Future<void> get isReady => _readyCompleter.future;
+  Future<void> ready() => _readyCompleter.future;
 
   static final _logger = Logger('MediaKitPlayer');
 
@@ -112,7 +112,6 @@ class MediaKitPlayer extends AudioPlayerPlatform {
 
   @override
   Future<LoadResponse> load(LoadRequest request) async {
-    _logger.fine('load(${request.toMap()})');
     _currentIndex = request.initialIndex ?? 0;
     _bufferedPosition = Duration.zero;
     _position = Duration.zero;
@@ -127,7 +126,6 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     } else {
       final playable =
           _convertAudioSourceIntoMediaKit(request.audioSourceMessage);
-      _logger.fine('playable is ${playable.toString()}');
       await _player.open(playable);
     }
 
@@ -213,6 +211,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   @override
   Future<ConcatenatingInsertAllResponse> concatenatingInsertAll(
       ConcatenatingInsertAllRequest request) async {
+    _logger.fine('concatenatingInsertAll(${request.toMap()})');
     for (final source in request.children) {
       await _player.add(_convertAudioSourceIntoMediaKit(source));
 
@@ -231,7 +230,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   @override
   Future<ConcatenatingRemoveRangeResponse> concatenatingRemoveRange(
       ConcatenatingRemoveRangeRequest request) async {
-    for (var i = 0; i < request.endIndex - request.startIndex; i++) {
+    for (var i = request.startIndex; i <= request.endIndex; i++) {
       await _player.remove(request.startIndex);
     }
 
@@ -240,10 +239,13 @@ class MediaKitPlayer extends AudioPlayerPlatform {
 
   @override
   Future<ConcatenatingMoveResponse> concatenatingMove(
-          ConcatenatingMoveRequest request) =>
-      _player
-          .move(request.currentIndex, request.newIndex)
-          .then((_) => ConcatenatingMoveResponse());
+      ConcatenatingMoveRequest request) {
+    _logger.fine('concatenatingMove(${request.toMap()})');
+
+    return _player
+        .move(request.currentIndex, request.newIndex)
+        .then((_) => ConcatenatingMoveResponse());
+  }
 
   Future<void> release() async {
     _logger.info('releasing player resources');

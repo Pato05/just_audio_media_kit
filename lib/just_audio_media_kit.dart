@@ -5,6 +5,7 @@ import 'package:just_audio_media_kit/mediakit_player.dart';
 import 'package:just_audio_platform_interface/just_audio_platform_interface.dart';
 import 'package:logging/logging.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:universal_platform/universal_platform.dart';
 
 class JustAudioMediaKit extends JustAudioPlatform {
   /// The internal MPV player's logLevel
@@ -32,6 +33,27 @@ class JustAudioMediaKit extends JustAudioPlatform {
   static final _logger = Logger('JustAudioMediaKit');
   final Map<String, MediaKitPlayer> _players = {};
 
+  /// Initializes the plugin if the platform we're running on is marked
+  /// as true, otherwise it will leave everything unchanged.
+  ///
+  /// Can also be safely called from Web, even though it'll have no effect
+  static void ensureInitialized({
+    bool linux = true,
+    bool windows = true,
+    bool android = false,
+    bool iOS = false,
+    bool macOS = false,
+  }) {
+    if ((UniversalPlatform.isLinux && linux) ||
+        (UniversalPlatform.isWindows && windows) ||
+        (UniversalPlatform.isAndroid && android) ||
+        (UniversalPlatform.isIOS && iOS) ||
+        (UniversalPlatform.isMacOS && macOS)) {
+      registerWith();
+    }
+  }
+
+  /// Registers the plugin with [JustAudioPlatform]
   static void registerWith() {
     JustAudioPlatform.instance = JustAudioMediaKit();
   }
@@ -48,7 +70,7 @@ class JustAudioMediaKit extends JustAudioPlatform {
     _logger.fine('instantiating new player ${request.id}');
     final player = MediaKitPlayer(request.id);
     _players[request.id] = player;
-    await player.isReady;
+    await player.ready();
     return player;
   }
 

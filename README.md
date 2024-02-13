@@ -2,25 +2,47 @@
 
 `media_kit` bindings for `just_audio`
 
+## Breaking changes in 2.x
+The installation process has changed, please re-read the install instructions.
+
 ## Installation
 
-Just include this package into your flutter/dart app, and use `just_audio` as normal.
-
-```bash
-flutter pub add just_audio_media_kit
-```
-
-or you can use the git version
-
+### In your `pubspec.yaml`:
 ```yaml
-just_audio_media_kit:
-    git:
-        url: https://github.com/Pato05/just_audio_media_kit.git
+dependencies:
+  just_audio_media_kit: ^2.0.0
+
+
+  # Select the native media_kit libs based on your usage:
+  # NOTE: if including video libs already, these audio libs aren't necessary.
+  media_kit_libs_linux: any
+  media_kit_libs_windows_audio: any
 ```
+
+**Note**: you can also use `just_audio_media_kit` for Android, iOS and macOS by including the libs and including them in the `init()` function. But only do this if you know what you're doing, as they're natively supported by `just_audio`
+
+
+
+### Before using the `AudioPlayer`, call
+```dart
+JustAudioMediaKit.ensureInitialized();
+
+// or, if you want to manually configure platforms instead:
+
+JustAudioMediaKit.ensureInitialized(
+    linux: true,            // default: true  - dependency: media_kit_libs_linux
+    windows: true,          // default: true - dependency: media_kit_libs_windows_audio
+    android: true,          // default: false - dependency: media_kit_libs_android_audio
+    iOS: true,              // default: false - dependency: media_kit_libs_ios_audio
+    macOS: true,            // default: false - dependency: media_kit_libs_macos_audio
+);
+```
+
+Now you can use just_audio's `AudioPlayer` as normal!
 
 ## Plugin-specific configuration (settings for `media_kit`'s `Player()` instance)
 
-**NOTE**: these must be set <u>before</u> the player initializes or they won't work!
+**NOTE**: these must be set <u>before</u> the player initializes or they won't work (you can set these right after calling `ensureInitialized`)!
 
 
 Set MPV's log level. Default: `MPVLogLevel.error`
@@ -78,3 +100,8 @@ JustAudioMediaKit.protocolWhitelist = const ['http', 'https'];
 | volume boost                   |        |
 
 \* reads from byte stream via a local HTTP server provided by `just_audio`
+
+## Caveats
+
+- `just_audio`'s shuffleOrder is currently ignored, because there doesn't seem to be a straightforward way to implement it
+- `SilenceAudioSource` and `ClippingAudioSource` are currently not supported
