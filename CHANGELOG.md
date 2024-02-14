@@ -1,8 +1,12 @@
+## 2.0.1
+
+- Fix issues regarding disposal of current players
+
 ## 2.0.0
+
 - **BREAKING: Removed hard dependencies** (Read the installation steps in README to comply!)
 - Fix queue insert with index
 - Fix moving items in ConcatenatingAudioSource
-
 
 ## 1.0.0
 

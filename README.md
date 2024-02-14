@@ -3,15 +3,16 @@
 `media_kit` bindings for `just_audio`
 
 ## Breaking changes in 2.x
+
 The installation process has changed, please re-read the install instructions.
 
 ## Installation
 
 ### In your `pubspec.yaml`:
+
 ```yaml
 dependencies:
   just_audio_media_kit: ^2.0.0
-
 
   # Select the native media_kit libs based on your usage:
   # NOTE: if including video libs already, these audio libs aren't necessary.
@@ -21,9 +22,8 @@ dependencies:
 
 **Note**: you can also use `just_audio_media_kit` for Android, iOS and macOS by including the libs and including them in the `init()` function. But only do this if you know what you're doing, as they're natively supported by `just_audio`
 
-
-
 ### Before using the `AudioPlayer`, call
+
 ```dart
 JustAudioMediaKit.ensureInitialized();
 
@@ -43,7 +43,6 @@ Now you can use just_audio's `AudioPlayer` as normal!
 ## Plugin-specific configuration (settings for `media_kit`'s `Player()` instance)
 
 **NOTE**: these must be set <u>before</u> the player initializes or they won't work (you can set these right after calling `ensureInitialized`)!
-
 
 Set MPV's log level. Default: `MPVLogLevel.error`
 
@@ -73,36 +72,44 @@ JustAudioMediaKit.protocolWhitelist = const ['http', 'https'];
 
 ## Features
 
-| Feature                        |  Linux, Windows |
-| ------------------------------ |  :--: |
-| read from URL                  |   ✅   |
-| read from file                 |   ✅   |
-| read from asset                |   ✅   |
-| read from byte stream          |   ✅*  |
-| request headers                |   ✅ (untested)   |
-| DASH                           |   ✅ (untested)  |
-| HLS                            |   ✅ (untested)  |
-| ICY metadata                   |        |
-| buffer status/position         |   ✅   |
-| play/pause/seek                |   ✅   |
-| set volume/speed               |   ✅   |
-| clip audio                     |      |
-| playlists                      |   ✅   |
-| looping/shuffling              |   ✅   |
-| compose audio                  |        |
-| gapless playback               |   ✅   |
-| report player errors           |   ✅   |
-| handle phonecall interruptions |        |
-| buffering/loading options      |        |
-| set pitch                      |   ✅   |
-| skip silence                   |        |
-| equalizer                      |        |
-| volume boost                   |        |
+| Feature                        | Linux, Windows |
+| ------------------------------ | :------------: |
+| read from URL                  |       ✅       |
+| read from file                 |       ✅       |
+| read from asset                |       ✅       |
+| read from byte stream          |      ✅\*      |
+| request headers                | ✅ (untested)  |
+| DASH                           | ✅ (untested)  |
+| HLS                            | ✅ (untested)  |
+| ICY metadata                   |                |
+| buffer status/position         |       ✅       |
+| play/pause/seek                |       ✅       |
+| set volume/speed               |       ✅       |
+| clip audio                     |                |
+| playlists                      |       ✅       |
+| looping/shuffling              |       ✅       |
+| compose audio                  |                |
+| gapless playback               |       ✅       |
+| report player errors           |       ✅       |
+| handle phonecall interruptions |                |
+| buffering/loading options      |                |
+| set pitch                      |       ✅       |
+| skip silence                   |                |
+| equalizer                      |                |
+| volume boost                   |                |
 
 \* reads from byte stream via a local HTTP server provided by `just_audio`
+
+<<<<<<< Updated upstream
 
 ## Caveats
 
 - `just_audio`'s shuffleOrder is currently ignored, because there doesn't seem to be a straightforward way to implement it
 - `SilenceAudioSource` and `ClippingAudioSource` are currently not supported
-- The plugin hasn't been tested with multiple player instances, though it might work. 
+- The plugin hasn't been tested with multiple player instances, though it might work.
+
+## Licensing
+
+This package is licensed under the `Unlicense` license, though
+please note that `package:media_kit` (which is a direct dependency of this package) is licensed under the `MIT` license.
+So please refer to [`package:media_kit`](https://github.com/media-kit/media-kit) for potential licensing issues.

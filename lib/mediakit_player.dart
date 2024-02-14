@@ -81,6 +81,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
         _dataController.add(PlayerDataMessage(speed: rate));
       }),
       _player.stream.log.listen((event) {
+        // ignore: avoid_print
         print("MPV: [${event.level}] ${event.prefix}: ${event.text}");
       }),
     ];
@@ -110,6 +111,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
 
   @override
   Future<LoadResponse> load(LoadRequest request) async {
+    _logger.finest('load(${request.toMap()})');
     _currentIndex = request.initialIndex ?? 0;
     _bufferedPosition = Duration.zero;
     _position = Duration.zero;
@@ -124,25 +126,18 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     } else {
       final playable =
           _convertAudioSourceIntoMediaKit(request.audioSourceMessage);
+      _logger.finest('playable is ${playable.toString()}');
       await _player.open(playable);
     }
 
     if (request.initialPosition != null) {
       _position = request.initialPosition!;
+      // TODO: fix this seek request here (it doesn't do anything)
       await _player.seek(request.initialPosition!);
     }
 
     _updatePlaybackEvent();
     return LoadResponse(duration: _player.state.duration);
-  }
-
-  Media _convertAudioSourceIntoMediaKit(AudioSourceMessage audioSource) {
-    if (audioSource is UriAudioSourceMessage) {
-      return Media(audioSource.uri, httpHeaders: audioSource.headers);
-    } else {
-      throw UnsupportedError(
-          '${audioSource.runtimeType} is currently not supported');
-    }
   }
 
   @override
@@ -172,20 +167,28 @@ class MediaKitPlayer extends AudioPlayerPlatform {
       _player.setPitch(request.pitch).then((_) => SetPitchResponse());
 
   @override
-  Future<SetLoopModeResponse> setLoopMode(SetLoopModeRequest request) => _player
-      .setPlaylistMode(const {
-        LoopModeMessage.off: PlaylistMode.none,
-        LoopModeMessage.one: PlaylistMode.single,
-        LoopModeMessage.all: PlaylistMode.loop,
-      }[request.loopMode]!)
-      .then((_) => SetLoopModeResponse());
+  Future<SetLoopModeResponse> setLoopMode(SetLoopModeRequest request) async {
+    await _player.setPlaylistMode(const {
+      LoopModeMessage.off: PlaylistMode.none,
+      LoopModeMessage.one: PlaylistMode.single,
+      LoopModeMessage.all: PlaylistMode.loop,
+    }[request.loopMode]!);
+
+    _dataController.add(PlayerDataMessage(loopMode: request.loopMode));
+    return SetLoopModeResponse();
+  }
 
   @override
   Future<SetShuffleModeResponse> setShuffleMode(
-          SetShuffleModeRequest request) =>
-      _player
-          .setShuffle(request.shuffleMode == ShuffleModeMessage.all)
-          .then((_) => SetShuffleModeResponse());
+      SetShuffleModeRequest request) async {
+    bool shuffling = request.shuffleMode != ShuffleModeMessage.none;
+    await _player.setShuffle(shuffling);
+
+    _dataController.add(PlayerDataMessage(
+        shuffleMode:
+            shuffling ? ShuffleModeMessage.all : ShuffleModeMessage.none));
+    return SetShuffleModeResponse();
+  }
 
   @override
   Future<SeekResponse> seek(SeekRequest request) async {
@@ -217,6 +220,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
 
       if (length == 0 || length == 1) continue;
 
+      // TODO: this needs fixing as it doesn't work as it should
       if (request.index < (length - 1) && request.index >= 0) {
         await _player.move(length, request.index);
       }
@@ -251,11 +255,20 @@ class MediaKitPlayer extends AudioPlayerPlatform {
 
   Future<void> release() async {
     _logger.info('releasing player resources');
+    await _player.dispose();
     // cancel all stream subscriptions
     for (final StreamSubscription subscription in _streamSubscriptions) {
-      await subscription.cancel();
+      unawaited(subscription.cancel());
     }
     _streamSubscriptions.clear();
-    await _player.dispose();
+  }
+
+  Media _convertAudioSourceIntoMediaKit(AudioSourceMessage audioSource) {
+    if (audioSource is UriAudioSourceMessage) {
+      return Media(audioSource.uri, httpHeaders: audioSource.headers);
+    } else {
+      throw UnsupportedError(
+          '${audioSource.runtimeType} is currently not supported');
+    }
   }
 }
