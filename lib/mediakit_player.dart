@@ -60,9 +60,10 @@ class MediaKitPlayer extends AudioPlayerPlatform {
         _dataController.add(PlayerDataMessage(volume: volume / 100.0));
       }),
       _player.stream.completed.listen((completed) {
-        _processingState = completed
-            ? ProcessingStateMessage.completed
-            : ProcessingStateMessage.ready;
+        // _processingState = completed
+        //     ? ProcessingStateMessage.completed
+        //     : ProcessingStateMessage.ready;
+        _processingState = ProcessingStateMessage.ready;
         _updatePlaybackEvent();
       }),
       _player.stream.error.listen((error) {
