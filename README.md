@@ -100,8 +100,6 @@ JustAudioMediaKit.protocolWhitelist = const ['http', 'https'];
 
 \* reads from byte stream via a local HTTP server provided by `just_audio`
 
-<<<<<<< Updated upstream
-
 ## Caveats
 
 - `just_audio`'s shuffleOrder is currently ignored, because there doesn't seem to be a straightforward way to implement it
