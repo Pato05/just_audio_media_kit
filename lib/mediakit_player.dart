@@ -20,6 +20,8 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   ProcessingStateMessage _processingState = ProcessingStateMessage.idle;
   Duration _bufferedPosition = Duration.zero;
   Duration _position = Duration.zero;
+  Playlist _currentPlaylist = Playlist([]);
+  PlaylistMode _currentPlaylistMode = PlaylistMode.none;
   int _currentIndex = 0;
 
   MediaKitPlayer(super.id) {
@@ -60,10 +62,13 @@ class MediaKitPlayer extends AudioPlayerPlatform {
         _dataController.add(PlayerDataMessage(volume: volume / 100.0));
       }),
       _player.stream.completed.listen((completed) {
-        // _processingState = completed
-        //     ? ProcessingStateMessage.completed
-        //     : ProcessingStateMessage.ready;
-        _processingState = ProcessingStateMessage.ready;
+        if (completed &&
+            _currentIndex == _currentPlaylist.medias.length - 1 &&
+            _currentPlaylistMode == PlaylistMode.none) {
+          _processingState = ProcessingStateMessage.completed;
+        } else {
+          _processingState = ProcessingStateMessage.ready;
+        }
         _updatePlaybackEvent();
       }),
       _player.stream.error.listen((error) {
@@ -72,7 +77,12 @@ class MediaKitPlayer extends AudioPlayerPlatform {
         _logger.severe('ERROR OCCURRED: $error');
       }),
       _player.stream.playlist.listen((playlist) {
+        _currentPlaylist = playlist;
         _currentIndex = playlist.index;
+        _updatePlaybackEvent();
+      }),
+      _player.stream.playlistMode.listen((playlistMode) {
+        _currentPlaylistMode = playlistMode;
         _updatePlaybackEvent();
       }),
       _player.stream.pitch.listen((pitch) {
