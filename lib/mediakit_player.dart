@@ -52,17 +52,22 @@ class MediaKitPlayer extends AudioPlayerPlatform {
         _updatePlaybackEvent();
       }),
       _player.stream.playing.listen((playing) {
-        _processingState = ProcessingStateMessage.ready;
         _dataController.add(PlayerDataMessage(playing: playing));
-        _updatePlaybackEvent();
       }),
       _player.stream.volume.listen((volume) {
         _dataController.add(PlayerDataMessage(volume: volume / 100.0));
       }),
       _player.stream.completed.listen((completed) {
-        _processingState = completed
-            ? ProcessingStateMessage.completed
-            : ProcessingStateMessage.ready;
+        if (completed &&
+            // is at the end of the [Playlist]
+            _currentIndex == _player.state.playlist.medias.length - 1 &&
+            // is not looping (technically this shouldn't be fired if the player is looping)
+            _player.state.playlistMode == PlaylistMode.none) {
+          _processingState = ProcessingStateMessage.completed;
+        } else {
+          _processingState = ProcessingStateMessage.ready;
+        }
+
         _updatePlaybackEvent();
       }),
       _player.stream.error.listen((error) {
@@ -73,6 +78,10 @@ class MediaKitPlayer extends AudioPlayerPlatform {
       _player.stream.playlist.listen((playlist) {
         _currentIndex = playlist.index;
         _updatePlaybackEvent();
+      }),
+      _player.stream.playlistMode.listen((playlistMode) {
+        _dataController.add(
+            PlayerDataMessage(loopMode: playlistModeToLoopMode(playlistMode)));
       }),
       _player.stream.pitch.listen((pitch) {
         _dataController.add(PlayerDataMessage(pitch: pitch));
@@ -85,6 +94,22 @@ class MediaKitPlayer extends AudioPlayerPlatform {
         print("MPV: [${event.level}] ${event.prefix}: ${event.text}");
       }),
     ];
+  }
+
+  PlaylistMode loopModeToPlaylistMode(LoopModeMessage loopMode) {
+    return switch (loopMode) {
+      LoopModeMessage.off => PlaylistMode.none,
+      LoopModeMessage.one => PlaylistMode.single,
+      LoopModeMessage.all => PlaylistMode.loop,
+    };
+  }
+
+  LoopModeMessage playlistModeToLoopMode(PlaylistMode playlistMode) {
+    return switch (playlistMode) {
+      PlaylistMode.none => LoopModeMessage.off,
+      PlaylistMode.single => LoopModeMessage.one,
+      PlaylistMode.loop => LoopModeMessage.all,
+    };
   }
 
   @override
@@ -116,10 +141,13 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     _bufferedPosition = Duration.zero;
     _position = Duration.zero;
 
+    _processingState = ProcessingStateMessage.buffering;
+
     if (request.audioSourceMessage is ConcatenatingAudioSourceMessage) {
-      final as = request.audioSourceMessage as ConcatenatingAudioSourceMessage;
+      final audioSource =
+          request.audioSourceMessage as ConcatenatingAudioSourceMessage;
       final playable = Playlist(
-          as.children.map(_convertAudioSourceIntoMediaKit).toList(),
+          audioSource.children.map(_convertAudioSourceIntoMediaKit).toList(),
           index: _currentIndex);
 
       await _player.open(playable);
@@ -168,13 +196,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
 
   @override
   Future<SetLoopModeResponse> setLoopMode(SetLoopModeRequest request) async {
-    await _player.setPlaylistMode(const {
-      LoopModeMessage.off: PlaylistMode.none,
-      LoopModeMessage.one: PlaylistMode.single,
-      LoopModeMessage.all: PlaylistMode.loop,
-    }[request.loopMode]!);
-
-    _dataController.add(PlayerDataMessage(loopMode: request.loopMode));
+    await _player.setPlaylistMode(loopModeToPlaylistMode(request.loopMode));
     return SetLoopModeResponse();
   }
 
@@ -220,7 +242,6 @@ class MediaKitPlayer extends AudioPlayerPlatform {
 
       if (length == 0 || length == 1) continue;
 
-      // TODO: this needs fixing as it doesn't work as it should
       if (request.index < (length - 1) && request.index >= 0) {
         await _player.move(length, request.index);
       }
