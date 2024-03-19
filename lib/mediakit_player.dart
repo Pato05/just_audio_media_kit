@@ -285,11 +285,18 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   }
 
   Media _convertAudioSourceIntoMediaKit(AudioSourceMessage audioSource) {
-    if (audioSource is UriAudioSourceMessage) {
-      return Media(audioSource.uri, httpHeaders: audioSource.headers);
-    } else {
-      throw UnsupportedError(
-          '${audioSource.runtimeType} is currently not supported');
+    switch (audioSource) {
+      case final UriAudioSourceMessage uriSource:
+        return Media(uriSource.uri, httpHeaders: audioSource.headers);
+
+      case final SilenceAudioSourceMessage silenceSource:
+        // from https://github.com/bleonard252/just_audio_mpv/blob/main/lib/src/mpv_player.dart#L137
+        return Media(
+            'av://lavfi:anullsrc=d=${silenceSource.duration.inMilliseconds}ms');
+
+      default:
+        throw UnsupportedError(
+            '${audioSource.runtimeType} is currently not supported');
     }
   }
 }
