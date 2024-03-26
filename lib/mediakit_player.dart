@@ -224,7 +224,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   Future<LoadResponse> load(LoadRequest request) async {
     _logger.finest('load(${request.toMap()})');
 
-    _currentIndex = _shuffling
+    _currentIndex = _shuffling && _shuffleOrder != null
         ? _shuffleOrder!.indexOf(request.initialIndex!)
         : request.initialIndex!;
     _shuffledIndex = request.initialIndex!;
