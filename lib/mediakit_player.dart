@@ -247,7 +247,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
       _playlist = [playable];
     }
 
-    await _player.open(_playlist![_currentIndex]);
+    await _player.open(_playlist![_shuffledIndex]);
 
     if (request.initialPosition != null) {
       _position = request.initialPosition!;
