@@ -224,10 +224,8 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   Future<LoadResponse> load(LoadRequest request) async {
     _logger.finest('load(${request.toMap()})');
 
-    _currentIndex = _shuffling && _shuffleOrder != null
-        ? _shuffleOrder!.indexOf(request.initialIndex!)
-        : request.initialIndex!;
-    _shuffledIndex = request.initialIndex!;
+    _currentIndex = request.initialIndex!;
+    _shuffledIndex = _currentIndex;
     _bufferedPosition = Duration.zero;
     _position = Duration.zero;
 
@@ -240,6 +238,9 @@ class MediaKitPlayer extends AudioPlayerPlatform {
       _playlist =
           audioSource.children.map(_convertAudioSourceIntoMediaKit).toList();
       _shuffleOrder = audioSource.shuffleOrder;
+
+      // If shuffle is enabled, then get the relative to the shuffle order index.
+      if (_shuffling) _currentIndex = _shuffleOrder!.indexOf(_currentIndex);
     } else {
       final playable =
           _convertAudioSourceIntoMediaKit(request.audioSourceMessage);
