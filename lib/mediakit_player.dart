@@ -344,15 +344,13 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     ConcatenatingInsertAllRequest request,
   ) async {
     // _logger.fine('concatenatingInsertAll(${request.toMap()})');
+
     for (final source in request.children) {
-      await _player.add(_convertAudioSourceIntoMediaKit(source));
-
-      final length = _player.state.playlist.medias.length;
-
-      if (length == 0 || length == 1) continue;
-
-      if (request.index < (length - 1) && request.index >= 0) {
-        await _player.move(length, request.index);
+      if (request.index > _playlist!.length) {
+        _playlist!.add(_convertAudioSourceIntoMediaKit(source));
+      } else {
+        _playlist!
+            .insert(request.index, _convertAudioSourceIntoMediaKit(source));
       }
     }
 
