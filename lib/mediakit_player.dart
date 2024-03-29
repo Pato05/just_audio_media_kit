@@ -25,6 +25,9 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   /// [LoadRequest.initialPosition] or [seek] request before [Player.play] was called and/or finished loading.
   Duration? _setPosition;
 
+  Media get _currentMedia =>
+      _player.state.playlist.medias[_player.state.playlist.index];
+
   MediaKitPlayer(super.id) {
     _player = Player(
         configuration: PlayerConfiguration(
@@ -37,6 +40,8 @@ class MediaKitPlayer extends AudioPlayerPlatform {
 
     _streamSubscriptions = [
       _player.stream.duration.listen((duration) {
+        if (_currentMedia.extras?['overrideDuration'] != null) return;
+
         _processingState = ProcessingStateMessage.ready;
         if (_setPosition != null && duration.inSeconds > 0) {
           unawaited(_player.seek(_setPosition!));
@@ -84,7 +89,8 @@ class MediaKitPlayer extends AudioPlayerPlatform {
       }),
       _player.stream.playlist.listen((playlist) {
         _currentIndex = playlist.index;
-        _updatePlaybackEvent();
+        _updatePlaybackEvent(
+            duration: _currentMedia.extras?['overrideDuration']);
       }),
       _player.stream.playlistMode.listen((playlistMode) {
         _dataController.add(
@@ -302,7 +308,9 @@ class MediaKitPlayer extends AudioPlayerPlatform {
       case final SilenceAudioSourceMessage silenceSource:
         // from https://github.com/bleonard252/just_audio_mpv/blob/main/lib/src/mpv_player.dart#L137
         return Media(
-            'av://lavfi:anullsrc=d=${silenceSource.duration.inMilliseconds}ms');
+          'av://lavfi:anullsrc=d=${silenceSource.duration.inMilliseconds}ms',
+          extras: {'overrideDuration': silenceSource.duration},
+        );
 
       default:
         throw UnsupportedError(
