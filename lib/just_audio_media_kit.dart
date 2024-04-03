@@ -12,6 +12,8 @@ import 'package:universal_platform/universal_platform.dart';
 class JustAudioMediaKit extends JustAudioPlatform {
   JustAudioMediaKit();
 
+  static String? _libmpv;
+
   /// The internal MPV player's logLevel
   static MPVLogLevel mpvLogLevel = MPVLogLevel.error;
 
@@ -48,7 +50,10 @@ class JustAudioMediaKit extends JustAudioPlatform {
     bool android = false,
     bool iOS = false,
     bool macOS = false,
+    String? libmpv,
   }) {
+    _libmpv = libmpv;
+
     if ((UniversalPlatform.isLinux && linux) ||
         (UniversalPlatform.isWindows && windows) ||
         (UniversalPlatform.isAndroid && android) ||
@@ -65,7 +70,7 @@ class JustAudioMediaKit extends JustAudioPlatform {
 
   @override
   Future<AudioPlayerPlatform> init(InitRequest request) async {
-    MediaKit.ensureInitialized();
+    MediaKit.ensureInitialized(libmpv: _libmpv);
 
     if (_players.containsKey(request.id)) {
       throw PlatformException(
