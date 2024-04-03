@@ -1,6 +1,6 @@
 name: just_audio_media_kit
 description: package:media_kit bindings for just_audio
-version: 2.0.2
+version: 2.0.3
 repository: https://github.com/Pato05/just_audio_media_kit
 
 environment:
