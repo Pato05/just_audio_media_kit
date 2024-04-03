@@ -12,6 +12,8 @@ import 'package:universal_platform/universal_platform.dart';
 class JustAudioMediaKit extends JustAudioPlatform {
   JustAudioMediaKit();
 
+  /// The path to the libmpv dynamic library.
+  /// The name of the library is generally `libmpv.so` on GNU/Linux and `libmpv-2.dll` on Windows.
   static String? _libmpv;
 
   /// The internal MPV player's logLevel
