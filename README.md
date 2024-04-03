@@ -42,7 +42,7 @@ Now you can use just_audio's `AudioPlayer` as normal!
 
 ## Plugin-specific configuration (settings for `media_kit`'s `Player()` instance)
 
-**NOTE**: these must be set <u>before</u> the player initializes or they won't work (you can set these right after calling `ensureInitialized`)!
+**NOTE**: these must be set <u>before</u> the player initializes or they won't work (you can set these right after or before calling `ensureInitialized`)!
 
 Set MPV's log level. Default: `MPVLogLevel.error`
 
@@ -69,6 +69,18 @@ Sets the list of allowed protocols for native backend. Default: `['udp', 'rtp', 
 ```dart
 JustAudioMediaKit.protocolWhitelist = const ['http', 'https'];
 ```
+
+## Manually specify `libmpv` path (ADVANCED)
+
+To manually specify the `libmpv` path, you can use the `libmpv` parameter in the `ensureInitialized` method:
+
+```dart
+JustAudioMediaKit.ensureInitialized(
+    libmpv: '/usr/lib/libmpv.so.2',
+);
+```
+
+This is **NOT NEEDED** in most cases, as `package:media_kit` will choose the right library for you (and can even bundle `libmpv` via the `media_kit_libs_*_*` packages). If you choose to use this option, you will have to perform checks about what platform you're on and where `libmpv` is located in that specific platform.
 
 ## Features
 

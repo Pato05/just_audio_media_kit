@@ -12,10 +12,6 @@ import 'package:universal_platform/universal_platform.dart';
 class JustAudioMediaKit extends JustAudioPlatform {
   JustAudioMediaKit();
 
-  /// The path to the libmpv dynamic library.
-  /// The name of the library is generally `libmpv.so` on GNU/Linux and `libmpv-2.dll` on Windows.
-  static String? _libmpv;
-
   /// The internal MPV player's logLevel
   static MPVLogLevel mpvLogLevel = MPVLogLevel.error;
 
@@ -52,16 +48,18 @@ class JustAudioMediaKit extends JustAudioPlatform {
     bool android = false,
     bool iOS = false,
     bool macOS = false,
+
+    /// The path to the libmpv dynamic library.
+    /// The name of the library is generally `libmpv.so` on GNU/Linux and `libmpv-2.dll` on Windows.
     String? libmpv,
   }) {
-    _libmpv = libmpv;
-
     if ((UniversalPlatform.isLinux && linux) ||
         (UniversalPlatform.isWindows && windows) ||
         (UniversalPlatform.isAndroid && android) ||
         (UniversalPlatform.isIOS && iOS) ||
         (UniversalPlatform.isMacOS && macOS)) {
       registerWith();
+      MediaKit.ensureInitialized(libmpv: libmpv);
     }
   }
 
@@ -72,8 +70,6 @@ class JustAudioMediaKit extends JustAudioPlatform {
 
   @override
   Future<AudioPlayerPlatform> init(InitRequest request) async {
-    MediaKit.ensureInitialized(libmpv: _libmpv);
-
     if (_players.containsKey(request.id)) {
       throw PlatformException(
           code: 'error', message: 'Player ${request.id} already exists!');
