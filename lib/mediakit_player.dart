@@ -66,6 +66,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
         _dataController.add(PlayerDataMessage(volume: volume / 100.0));
       }),
       _player.stream.completed.listen((completed) {
+        _bufferedPosition = _position = Duration.zero;
         if (completed &&
             // is at the end of the [Playlist]
             _currentIndex == _player.state.playlist.medias.length - 1 &&
@@ -84,7 +85,10 @@ class MediaKitPlayer extends AudioPlayerPlatform {
         _logger.severe('ERROR OCCURRED: $error');
       }),
       _player.stream.playlist.listen((playlist) {
-        _currentIndex = playlist.index;
+        if (_currentIndex != playlist.index) {
+          _bufferedPosition = _position = Duration.zero;
+          _currentIndex = playlist.index;
+        }
         _updatePlaybackEvent();
       }),
       _player.stream.playlistMode.listen((playlistMode) {
