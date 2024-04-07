@@ -34,6 +34,11 @@ class JustAudioMediaKit extends JustAudioPlatform {
     'crypto',
   ];
 
+  /// Enables or disables pitch shift control for native backend (with this set to false, [setPitch] won't work).
+  ///
+  /// This uses `scaletempo` under the hood & disables `audio-pitch-correction`.
+  static bool pitch = true;
+
   static final _logger = Logger('JustAudioMediaKit');
   final _players = HashMap<String, MediaKitPlayer>();
   final _disposingPlayers = HashMap<String, Future<void>>();

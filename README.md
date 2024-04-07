@@ -70,6 +70,12 @@ Sets the list of allowed protocols for native backend. Default: `['udp', 'rtp', 
 JustAudioMediaKit.protocolWhitelist = const ['http', 'https'];
 ```
 
+Enables or disables pitch shift control for native backend (with this set to false, `setPitch` won't work). Default: `true`
+
+```dart
+JustAudioMediaKit.pitch = true;
+```
+
 ## Manually specify `libmpv` path (ADVANCED)
 
 To manually specify the `libmpv` path, you can use the `libmpv` parameter in the `ensureInitialized` method:
