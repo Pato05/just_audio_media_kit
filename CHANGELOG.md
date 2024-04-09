@@ -1,3 +1,9 @@
+## 2.0.4
+
+- Support `--prefetch-playlist` for gapless playback (fixes [#11](https://github.com/Pato05/just_audio_media_kit/issues/11))
+- Reset `Duration` on track change (fixes [#10](https://github.com/Pato05/just_audio_media_kit/issues/10))
+- Set `pitch` to `true` by default (fix `setPitch` not working)
+
 ## 2.0.3
 
 - Add `libmpv` parameter to `ensureInitialized` ([#9](https://github.com/Pato05/just_audio_media_kit/issues/9))
