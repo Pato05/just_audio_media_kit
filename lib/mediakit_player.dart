@@ -1,3 +1,5 @@
+library just_audio_media_kit;
+
 import 'dart:async';
 
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
@@ -5,11 +7,17 @@ import 'package:just_audio_platform_interface/just_audio_platform_interface.dart
 import 'package:logging/logging.dart';
 import 'package:media_kit/media_kit.dart';
 
+/// An [AudioPlayerPlatform] which wraps `package:media_kit`'s [Player]
 class MediaKitPlayer extends AudioPlayerPlatform {
+  /// `package:media_kit`'s [Player]
   late final Player _player;
+
+  /// The subscriptions that have to be disposed
   late final List<StreamSubscription> _streamSubscriptions;
 
   final _readyCompleter = Completer<void>();
+
+  /// Completes when the player is ready
   Future<void> ready() => _readyCompleter.future;
 
   static final _logger = Logger('MediaKitPlayer');
@@ -20,6 +28,8 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   ProcessingStateMessage _processingState = ProcessingStateMessage.idle;
   Duration _bufferedPosition = Duration.zero;
   Duration _position = Duration.zero;
+
+  /// The index that's currently playing
   int _currentIndex = 0;
 
   /// [LoadRequest.initialPosition] or [seek] request before [Player.play] was called and/or finished loading.
@@ -99,7 +109,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
       }),
       _player.stream.playlistMode.listen((playlistMode) {
         _dataController.add(
-            PlayerDataMessage(loopMode: playlistModeToLoopMode(playlistMode)));
+            PlayerDataMessage(loopMode: _playlistModeToLoopMode(playlistMode)));
       }),
       _player.stream.pitch.listen((pitch) {
         _dataController.add(PlayerDataMessage(pitch: pitch));
@@ -114,7 +124,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     ];
   }
 
-  PlaylistMode loopModeToPlaylistMode(LoopModeMessage loopMode) {
+  PlaylistMode _loopModeToPlaylistMode(LoopModeMessage loopMode) {
     return switch (loopMode) {
       LoopModeMessage.off => PlaylistMode.none,
       LoopModeMessage.one => PlaylistMode.single,
@@ -122,7 +132,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     };
   }
 
-  LoopModeMessage playlistModeToLoopMode(PlaylistMode playlistMode) {
+  LoopModeMessage _playlistModeToLoopMode(PlaylistMode playlistMode) {
     return switch (playlistMode) {
       PlaylistMode.none => LoopModeMessage.off,
       PlaylistMode.single => LoopModeMessage.one,
@@ -138,6 +148,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   Stream<PlayerDataMessage> get playerDataMessageStream =>
       _dataController.stream;
 
+  /// Updates the playback event
   void _updatePlaybackEvent(
       {Duration? duration, IcyMetadataMessage? icyMetadata}) {
     _eventController.add(PlaybackEventMessage(
@@ -212,7 +223,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
 
   @override
   Future<SetLoopModeResponse> setLoopMode(SetLoopModeRequest request) async {
-    await _player.setPlaylistMode(loopModeToPlaylistMode(request.loopMode));
+    await _player.setPlaylistMode(_loopModeToPlaylistMode(request.loopMode));
     return SetLoopModeResponse();
   }
 
@@ -295,6 +306,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
         .then((_) => ConcatenatingMoveResponse());
   }
 
+  /// Release the resources used by this player.
   Future<void> release() async {
     _logger.info('releasing player resources');
     await _player.dispose();
@@ -305,6 +317,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     _streamSubscriptions.clear();
   }
 
+  /// Converts an [AudioSourceMessage] into a [Media] for playback
   Media _convertAudioSourceIntoMediaKit(AudioSourceMessage audioSource) {
     switch (audioSource) {
       case final UriAudioSourceMessage uriSource:
