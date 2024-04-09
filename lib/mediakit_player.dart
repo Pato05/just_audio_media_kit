@@ -36,6 +36,12 @@ class MediaKitPlayer extends AudioPlayerPlatform {
       ready: () => _readyCompleter.complete(),
     ));
 
+    if (JustAudioMediaKit.prefetchPlaylist &&
+        _player.platform is NativePlayer) {
+      (_player.platform as NativePlayer)
+          .setProperty('prefetch-playlist', 'yes');
+    }
+
     _streamSubscriptions = [
       _player.stream.duration.listen((duration) {
         _processingState = ProcessingStateMessage.ready;

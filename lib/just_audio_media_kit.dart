@@ -39,6 +39,12 @@ class JustAudioMediaKit extends JustAudioPlatform {
   /// This uses `scaletempo` under the hood & disables `audio-pitch-correction`.
   static bool pitch = true;
 
+  /// Enables [`--prefetch-playlist`](https://mpv.io/manual/stable/#options-prefetch-playlist) in libmpv
+  /// This is highly experimental. Use at your own risk.
+  ///
+  /// Check [mpv's docs](https://mpv.io/manual/stable/#options-prefetch-playlist) and [related issue](https://github.com/Pato05/just_audio_media_kit/issues/11) for more information
+  static bool prefetchPlaylist = false;
+
   static final _logger = Logger('JustAudioMediaKit');
   final _players = HashMap<String, MediaKitPlayer>();
   final _disposingPlayers = HashMap<String, Future<void>>();
