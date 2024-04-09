@@ -1,6 +1,6 @@
 # just_audio_media_kit
 
-`media_kit` bindings for `just_audio`
+[`media_kit`](https://github.com/media-kit/media-kit) bindings for [`just_audio`](https://github.com/ryanheise/just_audio)
 
 ## Breaking changes in 2.x
 
@@ -20,15 +20,27 @@ dependencies:
   media_kit_libs_windows_audio: any
 ```
 
-**Note**: you can also use `just_audio_media_kit` for Android, iOS and macOS by including the libs and including them in the `init()` function. But only do this if you know what you're doing, as they're natively supported by `just_audio`
+**Note**: you can also use `just_audio_media_kit` for Android, iOS and macOS by including the required libs (see below) and enable them in `ensureInitialized()`. However, this is not required as they're natively supported by `just_audio`.
+
+### Use mimalloc (from [media-kit's README](https://github.com/media-kit/media-kit?tab=readme-ov-file#utilize-mimalloc))
+
+You should consider replacing the default memory allocator with [mimalloc](https://github.com/microsoft/mimalloc) for [avoiding memory leaks](https://github.com/media-kit/media-kit/issues/68).
+
+This is as simple as [adding one line to `linux/CMakeLists.txt`](https://github.com/media-kit/media-kit/blob/d02a97ce70b316207db024401fb99e3f4509a250/media_kit_test/linux/CMakeLists.txt#L92-L94):
+
+```cmake
+target_link_libraries(${BINARY_NAME} PRIVATE ${MIMALLOC_LIB})
+```
 
 ### Before using the `AudioPlayer`, call
 
 ```dart
+// by default, windows and linux are enabled
 JustAudioMediaKit.ensureInitialized();
 
-// or, if you want to manually configure platforms instead:
-
+// or, if you want to manually configure enabled platforms instead:
+// make sure to include the required dependency in pubspec.yaml for
+// each enabled platform!
 JustAudioMediaKit.ensureInitialized(
     linux: true,            // default: true  - dependency: media_kit_libs_linux
     windows: true,          // default: true  - dependency: media_kit_libs_windows_audio
@@ -120,9 +132,9 @@ This is **NOT NEEDED** in most cases, as `package:media_kit` will choose the rig
 
 ## Caveats
 
-- `just_audio`'s shuffleOrder is currently ignored, because there doesn't seem to be a straightforward way to implement it
+- `just_audio`'s shuffleOrder is currently ignored, because there doesn't seem to be a straightforward way to implement it: because of this, I recommend implementing shuffle by manually shuffling the queue, create a new `ConcatenatingAudioSource` and use `setAudioSource` on your player object. 
 - `ClippingAudioSource` is currently not supported (waiting for [media-kit/media-kit#581](https://github.com/media-kit/media-kit/pull/581) to be released)
-- The plugin hasn't been tested with multiple player instances, though it might work.
+- The plugin hasn't been tested with multiple player instances, though it should work without any issues.
 
 ## Licensing
 
