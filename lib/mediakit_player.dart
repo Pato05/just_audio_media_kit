@@ -311,6 +311,22 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   }
 
   @override
+  Future<SetShuffleOrderResponse> setShuffleOrder(
+    SetShuffleOrderRequest request,
+  ) async {
+    // Not tested.
+
+    if (request.audioSourceMessage is ConcatenatingAudioSourceMessage) {
+      final audioSource =
+          request.audioSourceMessage as ConcatenatingAudioSourceMessage;
+
+      _shuffleOrder = audioSource.shuffleOrder;
+    }
+
+    return SetShuffleOrderResponse();
+  }
+
+  @override
   Future<SeekResponse> seek(SeekRequest request) async {
     _logger.finest('seek(${request.toMap()})');
 
