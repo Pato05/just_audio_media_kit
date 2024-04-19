@@ -1,3 +1,5 @@
+library just_audio_media_kit;
+
 import 'dart:async';
 
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
@@ -5,11 +7,17 @@ import 'package:just_audio_platform_interface/just_audio_platform_interface.dart
 import 'package:logging/logging.dart';
 import 'package:media_kit/media_kit.dart';
 
+/// An [AudioPlayerPlatform] which wraps `package:media_kit`'s [Player]
 class MediaKitPlayer extends AudioPlayerPlatform {
+  /// `package:media_kit`'s [Player]
   late final Player _player;
+
+  /// The subscriptions that have to be disposed
   late final List<StreamSubscription> _streamSubscriptions;
 
   final _readyCompleter = Completer<void>();
+
+  /// Completes when the player is ready
   Future<void> ready() => _readyCompleter.future;
 
   static final _logger = Logger('MediaKitPlayer');
@@ -26,21 +34,37 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   int _currentIndex = 0;
   int _shuffledIndex = 0;
 
+  /// [LoadRequest.initialPosition] or [seek] request before [Player.play] was called and/or finished loading.
+  Duration? _setPosition;
+
   MediaKitPlayer(super.id) {
     _player = Player(
-      configuration: PlayerConfiguration(
-        protocolWhitelist: JustAudioMediaKit.protocolWhitelist,
-        title: JustAudioMediaKit.title,
-        bufferSize: JustAudioMediaKit.bufferSize,
-        logLevel: JustAudioMediaKit.mpvLogLevel,
-        ready: () => _readyCompleter.complete(),
-      ),
-    );
+        configuration: PlayerConfiguration(
+      pitch: JustAudioMediaKit.pitch,
+      protocolWhitelist: JustAudioMediaKit.protocolWhitelist,
+      title: JustAudioMediaKit.title,
+      bufferSize: JustAudioMediaKit.bufferSize,
+      logLevel: JustAudioMediaKit.mpvLogLevel,
+      ready: () => _readyCompleter.complete(),
+    ));
+
+    if (JustAudioMediaKit.prefetchPlaylist &&
+        _player.platform is NativePlayer) {
+      (_player.platform as NativePlayer)
+          .setProperty('prefetch-playlist', 'yes');
+    }
 
     _streamSubscriptions = [
       _player.stream.duration.listen(
         (duration) {
           _processingState = ProcessingStateMessage.ready;
+
+          if (_setPosition != null && duration.inSeconds > 0) {
+            unawaited(_player.seek(_setPosition!));
+
+            _setPosition = null;
+          }
+
           _updatePlaybackEvent(duration: duration);
         },
       ),
@@ -114,7 +138,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
         (playlistMode) {
           _dataController.add(
             PlayerDataMessage(
-              loopMode: playlistModeToLoopMode(playlistMode),
+              loopMode: _playlistModeToLoopMode(playlistMode),
             ),
           );
         },
@@ -142,7 +166,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     ];
   }
 
-  PlaylistMode loopModeToPlaylistMode(LoopModeMessage loopMode) {
+  PlaylistMode _loopModeToPlaylistMode(LoopModeMessage loopMode) {
     return switch (loopMode) {
       LoopModeMessage.off => PlaylistMode.none,
       LoopModeMessage.one => PlaylistMode.single,
@@ -150,7 +174,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     };
   }
 
-  LoopModeMessage playlistModeToLoopMode(PlaylistMode playlistMode) {
+  LoopModeMessage _playlistModeToLoopMode(PlaylistMode playlistMode) {
     return switch (playlistMode) {
       PlaylistMode.none => LoopModeMessage.off,
       PlaylistMode.single => LoopModeMessage.one,
@@ -184,6 +208,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     );
   }
 
+  /// Plays the next media, while respecting [_playlist] and [_currentIndex].
   Future<void> next() async {
     if (_playlist == null) return;
 
@@ -251,7 +276,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     await _player.open(_playlist![_shuffledIndex]);
 
     if (request.initialPosition != null) {
-      _position = request.initialPosition!;
+      _setPosition = _position = request.initialPosition!;
 
       // TODO: fix this seek request here (it doesn't do anything)
       await _player.seek(request.initialPosition!);
@@ -289,7 +314,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
 
   @override
   Future<SetLoopModeResponse> setLoopMode(SetLoopModeRequest request) async {
-    await _player.setPlaylistMode(loopModeToPlaylistMode(request.loopMode));
+    await _player.setPlaylistMode(_loopModeToPlaylistMode(request.loopMode));
 
     return SetLoopModeResponse();
   }
@@ -344,7 +369,11 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     if (request.position != null) {
       _position = request.position!;
 
-      await _player.seek(request.position!);
+      if (_player.state.duration.inSeconds > 0) {
+        await _player.seek(request.position!);
+      } else {
+        _setPosition = request.position!;
+      }
     } else {
       _position = Duration.zero;
     }
@@ -399,6 +428,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
         .then((_) => ConcatenatingMoveResponse());
   }
 
+  /// Release the resources used by this player.
   Future<void> release() async {
     _logger.info('releasing player resources');
 
@@ -409,12 +439,20 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     _streamSubscriptions.clear();
   }
 
+  /// Converts an [AudioSourceMessage] into a [Media] for playback
   Media _convertAudioSourceIntoMediaKit(AudioSourceMessage audioSource) {
-    if (audioSource is UriAudioSourceMessage) {
-      return Media(audioSource.uri, httpHeaders: audioSource.headers);
-    } else {
-      throw UnsupportedError(
-          '${audioSource.runtimeType} is currently not supported');
+    switch (audioSource) {
+      case final UriAudioSourceMessage uriSource:
+        return Media(uriSource.uri, httpHeaders: audioSource.headers);
+
+      case final SilenceAudioSourceMessage silenceSource:
+        // from https://github.com/bleonard252/just_audio_mpv/blob/main/lib/src/mpv_player.dart#L137
+        return Media(
+            'av://lavfi:anullsrc=d=${silenceSource.duration.inMilliseconds}ms');
+
+      default:
+        throw UnsupportedError(
+            '${audioSource.runtimeType} is currently not supported');
     }
   }
 }

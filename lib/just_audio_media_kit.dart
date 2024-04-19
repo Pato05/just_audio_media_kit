@@ -1,3 +1,4 @@
+/// package:media_kit bindings for just_audio to support Linux and Windows.
 library just_audio_media_kit;
 
 import 'dart:collection';
@@ -34,8 +35,23 @@ class JustAudioMediaKit extends JustAudioPlatform {
     'crypto',
   ];
 
+  /// Enables or disables pitch shift control for native backend (with this set to false, [setPitch] won't work).
+  ///
+  /// This uses `scaletempo` under the hood & disables `audio-pitch-correction`.
+  static bool pitch = true;
+
+  /// Enables gapless playback via the [`--prefetch-playlist`](https://mpv.io/manual/stable/#options-prefetch-playlist) in libmpv
+  ///
+  /// This is highly experimental. Use at your own risk.
+  ///
+  /// Check [mpv's docs](https://mpv.io/manual/stable/#options-prefetch-playlist) and
+  /// [the related issue](https://github.com/Pato05/just_audio_media_kit/issues/11) for more information
+  static bool prefetchPlaylist = false;
+
   static final _logger = Logger('JustAudioMediaKit');
   final _players = HashMap<String, MediaKitPlayer>();
+
+  /// Players that are disposing (player id -> future that completes when the player is disposed)
   final _disposingPlayers = HashMap<String, Future<void>>();
 
   /// Initializes the plugin if the platform we're running on is marked
@@ -48,6 +64,10 @@ class JustAudioMediaKit extends JustAudioPlatform {
     bool android = false,
     bool iOS = false,
     bool macOS = false,
+
+    /// The path to the libmpv dynamic library.
+    /// The name of the library is generally `libmpv.so` on GNU/Linux and `libmpv-2.dll` on Windows.
+    String? libmpv,
   }) {
     if ((UniversalPlatform.isLinux && linux) ||
         (UniversalPlatform.isWindows && windows) ||
@@ -55,6 +75,7 @@ class JustAudioMediaKit extends JustAudioPlatform {
         (UniversalPlatform.isIOS && iOS) ||
         (UniversalPlatform.isMacOS && macOS)) {
       registerWith();
+      MediaKit.ensureInitialized(libmpv: libmpv);
     }
   }
 
@@ -65,8 +86,6 @@ class JustAudioMediaKit extends JustAudioPlatform {
 
   @override
   Future<AudioPlayerPlatform> init(InitRequest request) async {
-    MediaKit.ensureInitialized();
-
     if (_players.containsKey(request.id)) {
       throw PlatformException(
           code: 'error', message: 'Player ${request.id} already exists!');
