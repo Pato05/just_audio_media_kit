@@ -285,7 +285,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   @override
   Future<ConcatenatingRemoveRangeResponse> concatenatingRemoveRange(
       ConcatenatingRemoveRangeRequest request) async {
-    for (var i = request.startIndex; i <= request.endIndex; i++) {
+    for (var i = request.startIndex; i < request.endIndex; i++) {
       await _player.remove(request.startIndex);
     }
 
