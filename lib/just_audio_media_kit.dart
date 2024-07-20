@@ -87,8 +87,7 @@ class JustAudioMediaKit extends JustAudioPlatform {
   @override
   Future<AudioPlayerPlatform> init(InitRequest request) async {
     if (_players.containsKey(request.id)) {
-      throw PlatformException(
-          code: 'error', message: 'Player ${request.id} already exists!');
+      return _players[request.id]!;
     }
 
     _logger.fine('instantiating new player ${request.id}');
