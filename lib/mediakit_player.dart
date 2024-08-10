@@ -318,7 +318,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
       if (_player.state.playlistMode == PlaylistMode.loop) {
         _fixIndecies(current: 0);
 
-        await _player.open(_playlist![_shuffledIndex]);
+        await _sendAudios();
       } else {
         await _player.stop();
       }
@@ -329,7 +329,35 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     // We haven't reached the end of the playlist yet, so play the next track.
     _fixIndecies(current: _currentIndex + 1);
 
-    return await _player.open(_playlist![_shuffledIndex]);
+    return await _sendAudios();
+  }
+
+  /// Sends the next [JustAudioMediaKit.prefetchPlaylistSize] tracks to the player, and plays them.
+  Future<void> _sendAudios() async {
+    if (_playlist == null) return;
+
+    // Take [prefetchPlaylistSize] tracks from the playlist and send them to the player.
+    final int maxSize =
+        (_currentIndex + JustAudioMediaKit.prefetchPlaylistSize).clamp(
+      0,
+      _playlist!.length,
+    );
+
+    await _player.open(
+      Playlist(
+        _isShuffling
+            ? _shuffleOrder
+                .sublist(_currentIndex, maxSize)
+                .map(
+                  (index) => _playlist![index],
+                )
+                .toList()
+            : _playlist!.sublist(
+                _currentIndex,
+                maxSize,
+              ),
+      ),
+    );
   }
 
   @override
@@ -363,7 +391,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     }
 
     // [_shuffledIndex] contains the index of a track that is supposed to be played.
-    await _player.open(_playlist![_shuffledIndex]);
+    await _sendAudios();
 
     if (request.initialPosition != null) {
       _setPosition = _position = request.initialPosition!;
@@ -461,7 +489,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
 
       _fixIndecies(shuffled: request.index!);
 
-      await _player.open(_playlist![_shuffledIndex]);
+      await _sendAudios();
     }
 
     _position = request.position ?? Duration.zero;
