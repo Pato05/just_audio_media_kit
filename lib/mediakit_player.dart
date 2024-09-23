@@ -336,6 +336,10 @@ class MediaKitPlayer extends AudioPlayerPlatform {
           extras: {'overrideDuration': silenceSource.duration},
         );
 
+      case final ClippingAudioSourceMessage clippingSource:
+        return Media(clippingSource.child.uri,
+            start: clippingSource.start, end: clippingSource.end);
+
       default:
         throw UnsupportedError(
             '${audioSource.runtimeType} is currently not supported');
