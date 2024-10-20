@@ -35,8 +35,11 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   /// [LoadRequest.initialPosition] or [seek] request before [Player.play] was called and/or finished loading.
   Duration? _setPosition;
 
-  Media get _currentMedia =>
-      _player.state.playlist.medias[_player.state.playlist.index];
+  Media? get _currentMedia {
+    var medias = _player.state.playlist.medias;
+    if (medias.isEmpty) return null;
+    return medias[_player.state.playlist.index];
+  }
 
   MediaKitPlayer(super.id) {
     _player = Player(
@@ -57,7 +60,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
 
     _streamSubscriptions = [
       _player.stream.duration.listen((duration) {
-        if (_currentMedia.extras?['overrideDuration'] != null) return;
+        if (_currentMedia?.extras?['overrideDuration'] != null) return;
 
         _processingState = ProcessingStateMessage.ready;
         if (_setPosition != null && duration.inSeconds > 0) {
@@ -111,7 +114,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
           _currentIndex = playlist.index;
         }
         _updatePlaybackEvent(
-            duration: _currentMedia.extras?['overrideDuration']);
+            duration: _currentMedia?.extras?['overrideDuration']);
       }),
       _player.stream.playlistMode.listen((playlistMode) {
         _dataController.add(
