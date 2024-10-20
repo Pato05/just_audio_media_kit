@@ -1,3 +1,8 @@
+## 2.0.6
+
+- Add `ClippingAudioSource` support ([#19](https://github.com/Pato05/just_audio_media_kit/pull/19))
+- Fix InvalidRangeError when there's no `Media` in `Playlist` ([#17](https://github.com/Pato05/just_audio_media_kit/pull/17))
+
 ## 2.0.5
 
 - Override duration for [SilenceAudioSource]

@@ -126,7 +126,7 @@ This is **NOT NEEDED** in most cases, as `package:media_kit` will choose the rig
 | buffer status/position         |       ✅       |
 | play/pause/seek                |       ✅       |
 | set volume/speed               |       ✅       |
-| clip audio                     |                |
+| clip audio                     |       ✅       |
 | playlists                      |       ✅       |
 | looping/shuffling              |       ✅       |
 | compose audio                  |                |
