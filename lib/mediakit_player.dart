@@ -6,6 +6,7 @@ import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:just_audio_platform_interface/just_audio_platform_interface.dart';
 import 'package:logging/logging.dart';
 import 'package:media_kit/media_kit.dart';
+import 'src/set_property.dart';
 
 /// An [AudioPlayerPlatform] which wraps `package:media_kit`'s [Player]
 class MediaKitPlayer extends AudioPlayerPlatform {
@@ -60,10 +61,8 @@ class MediaKitPlayer extends AudioPlayerPlatform {
       ready: () => _readyCompleter.complete(),
     ));
 
-    if (JustAudioMediaKit.prefetchPlaylist &&
-        _player.platform is NativePlayer) {
-      (_player.platform as NativePlayer)
-          .setProperty('prefetch-playlist', 'yes');
+    if (JustAudioMediaKit.prefetchPlaylist) {
+      setProperty(_player, 'prefetch-playlist', 'yes');
     }
 
     _streamSubscriptions = [
