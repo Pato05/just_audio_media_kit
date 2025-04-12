@@ -1,4 +1,4 @@
-/// package:media_kit bindings for just_audio to support Linux and Windows.
+/// `package:media_kit` bindings for `just_audio` to support Linux and Windows.
 library just_audio_media_kit;
 
 import 'dart:collection';
@@ -11,12 +11,12 @@ import 'package:media_kit/media_kit.dart';
 import 'package:universal_platform/universal_platform.dart';
 
 class JustAudioMediaKit extends JustAudioPlatform {
-  JustAudioMediaKit();
+  static final _logger = Logger('JustAudioMediaKit');
 
-  /// The internal MPV player's logLevel
+  /// The internal MPV player's logLevel.
   static MPVLogLevel mpvLogLevel = MPVLogLevel.error;
 
-  /// Sets the demuxer's cache size (in bytes)
+  /// Sets the demuxer's cache size (in bytes).
   static int bufferSize = 32 * 1024 * 1024;
 
   /// Sets the name of the underlying window & process for native backend. This is visible inside the Windows' volume mixer.
@@ -40,15 +40,22 @@ class JustAudioMediaKit extends JustAudioPlatform {
   /// This uses `scaletempo` under the hood & disables `audio-pitch-correction`.
   static bool pitch = true;
 
-  /// Enables gapless playback via the [`--prefetch-playlist`](https://mpv.io/manual/stable/#options-prefetch-playlist) in libmpv
+  /// Enables gapless playback via the [`--prefetch-playlist`](https://mpv.io/manual/stable/#options-prefetch-playlist) in libmpv.
   ///
   /// This is highly experimental. Use at your own risk.
   ///
   /// Check [mpv's docs](https://mpv.io/manual/stable/#options-prefetch-playlist) and
-  /// [the related issue](https://github.com/Pato05/just_audio_media_kit/issues/11) for more information
+  /// [the related issue](https://github.com/Pato05/just_audio_media_kit/issues/11) for more information.
+  ///
+  /// [prefetchPlaylistSize] can be changed to set the amount of items to prefetch.
   static bool prefetchPlaylist = false;
 
-  static final _logger = Logger('JustAudioMediaKit');
+  /// Max amount of items to prefetch in the playlist.
+  ///
+  /// Does nothing, if [prefetchPlaylist] is set to false. Default is 2.
+  /// It is not recommended to change this, because libmpv doesn't prefetch more than 2 items.
+  static int prefetchPlaylistSize = 2;
+
   final _players = HashMap<String, MediaKitPlayer>();
 
   /// Players that are disposing (player id -> future that completes when the player is disposed)
@@ -57,7 +64,7 @@ class JustAudioMediaKit extends JustAudioPlatform {
   /// Initializes the plugin if the platform we're running on is marked
   /// as true, otherwise it will leave everything unchanged.
   ///
-  /// Can also be safely called from Web, even though it'll have no effect
+  /// Can also be safely called from Web, even though it'll have no effect.
   static void ensureInitialized({
     bool linux = true,
     bool windows = true,
