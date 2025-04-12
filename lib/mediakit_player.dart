@@ -31,7 +31,6 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   Duration _bufferedPosition = Duration.zero;
   Duration _position = Duration.zero;
   Duration? _duration;
-  Playable? _playable;
   bool _playing = false;
   bool _mediaOpened = false;
   int? _errorCode;
@@ -243,13 +242,13 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     if (request.audioSourceMessage is ConcatenatingAudioSourceMessage) {
       final audioSource =
           request.audioSourceMessage as ConcatenatingAudioSourceMessage;
-      final playable = _playable = Playlist(
+      final playable = Playlist(
           audioSource.children.map(_convertAudioSourceIntoMediaKit).toList(),
           index: _currentIndex);
 
       await _player.open(playable, play: _playing);
     } else {
-      final playable = _playable =
+      final playable =
           _convertAudioSourceIntoMediaKit(request.audioSourceMessage);
       _logger.finest('playable is ${playable.toString()}');
       await _player.open(playable, play: _playing);
@@ -268,7 +267,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   @override
   Future<PlayResponse> play(PlayRequest request) async {
     _playing = true;
-    if (_playable != null) {
+    if (_mediaOpened) {
       await _player.play();
     }
     return PlayResponse();
@@ -277,7 +276,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   @override
   Future<PauseResponse> pause(PauseRequest request) async {
     _playing = false;
-    if (_playable != null) {
+    if (_mediaOpened) {
       await _player.pause();
     }
     return PauseResponse();
@@ -391,7 +390,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   /// Release the resources used by this player.
   Future<void> release() async {
     _logger.info('releasing player resources');
-    _playable = null;
+    _mediaOpened = false;
     await _player.dispose();
     // cancel all stream subscriptions
     for (final StreamSubscription subscription in _streamSubscriptions) {
