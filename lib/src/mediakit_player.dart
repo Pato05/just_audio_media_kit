@@ -1,12 +1,10 @@
-library just_audio_media_kit;
-
 import 'dart:async';
 
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:just_audio_platform_interface/just_audio_platform_interface.dart';
 import 'package:logging/logging.dart';
 import 'package:media_kit/media_kit.dart';
-import 'src/set_property.dart';
+import 'set_property.dart';
 
 /// An [AudioPlayerPlatform] which wraps `package:media_kit`'s [Player].
 class MediaKitPlayer extends AudioPlayerPlatform {
@@ -482,16 +480,10 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     _logger.finest('seek(${request.toMap()})');
 
     if (request.index != null) {
-      // If index is the same, then simply seek at the beginning.
-      if (request.index == _shuffledIndex) {
-        await _player.seek(Duration.zero);
-
-        return SeekResponse();
-      }
-
       _fixIndecies(shuffled: request.index!);
 
       await _sendAudios();
+      if (!_playing) await _player.pause();
     }
 
     final position = request.position;
@@ -580,12 +572,14 @@ class MediaKitPlayer extends AudioPlayerPlatform {
       case final UriAudioSourceMessage uriSource:
         return Media(uriSource.uri, httpHeaders: audioSource.headers);
 
-      case final SilenceAudioSourceMessage silenceSource:
-        // from https://github.com/bleonard252/just_audio_mpv/blob/main/lib/src/mpv_player.dart#L137
-        return Media(
-          'av://lavfi:anullsrc=d=${silenceSource.duration.inMilliseconds}ms',
-          extras: {'overrideDuration': silenceSource.duration},
-        );
+      // removed because it doesn't seem to be actually working.
+      // Related media-kit issue: https://github.com/media-kit/media-kit/issues/28
+      // case final SilenceAudioSourceMessage silenceSource:
+      //   // from https://github.com/bleonard252/just_audio_mpv/blob/main/lib/src/mpv_player.dart#L137
+      //   return Media(
+      //     'av://lavfi:anullsrc=d=${silenceSource.duration.inMilliseconds}ms',
+      //     extras: {'overrideDuration': silenceSource.duration},
+      //   );
 
       case final ClippingAudioSourceMessage clippingSource:
         return Media(clippingSource.child.uri,

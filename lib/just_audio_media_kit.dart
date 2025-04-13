@@ -1,16 +1,18 @@
 /// `package:media_kit` bindings for `just_audio` to support Linux and Windows.
-library just_audio_media_kit;
+library;
 
 import 'dart:collection';
 
 import 'package:flutter/services.dart';
-import 'package:just_audio_media_kit/mediakit_player.dart';
+import 'package:just_audio_media_kit/src/mediakit_player.dart';
 import 'package:just_audio_platform_interface/just_audio_platform_interface.dart';
 import 'package:logging/logging.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:universal_platform/universal_platform.dart';
 
 class JustAudioMediaKit extends JustAudioPlatform {
+  JustAudioMediaKit._();
+
   static final _logger = Logger('JustAudioMediaKit');
 
   /// The internal MPV player's logLevel.
@@ -88,7 +90,7 @@ class JustAudioMediaKit extends JustAudioPlatform {
 
   /// Registers the plugin with [JustAudioPlatform]
   static void registerWith() {
-    JustAudioPlatform.instance = JustAudioMediaKit();
+    JustAudioPlatform.instance = JustAudioMediaKit._();
   }
 
   @override
