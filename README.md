@@ -76,7 +76,7 @@ JustAudioMediaKit.title = 'My Audio Player App';
 
 Sets the list of allowed protocols for native backend. Default: `['udp', 'rtp', 'tcp', 'tls', 'data', 'file', 'http', 'https', 'crypto']`
 
-**IF YOU EDIT THIS OPTION**: Remember that `file` is needed for playing local files, `https` and `http` are needed to play from URLs and `http` to play from a `StreamAudioSource` (and sources that implement it, like `LockCachingAudioSource`).
+**IF YOU EDIT THIS OPTION**: Remember that `file` is needed for playing local files (assets included!), `https` and `http` are needed to play from URLs and `http` to play from a `StreamAudioSource` (and sources that implement it, like `LockCachingAudioSource`).
 
 ```dart
 JustAudioMediaKit.protocolWhitelist = const ['http', 'https'];
@@ -113,7 +113,7 @@ This is **NOT NEEDED** in most cases, as `package:media_kit` will choose the rig
 
 ## Features
 
-| Feature                        | Linux, Windows |
+| Feature                        |                |
 | ------------------------------ | :------------: |
 | read from URL                  |       ✅       |
 | read from file                 |       ✅       |
@@ -144,8 +144,10 @@ This is **NOT NEEDED** in most cases, as `package:media_kit` will choose the rig
 
 ## Caveats
 
-- `just_audio`'s shuffleOrder is currently ignored, because there doesn't seem to be a straightforward way to implement it: because of this, I recommend implementing shuffle by manually shuffling the queue, create a new `ConcatenatingAudioSource` and use `setAudioSource` on your player object. 
-- `ClippingAudioSource` is currently not supported (waiting for [media-kit/media-kit#581](https://github.com/media-kit/media-kit/pull/581) to be released)
+- `just_audio`'s shuffleOrder is currently ignored, because there doesn't seem to be a straightforward way to implement it: because of this, I recommend implementing shuffle by manually shuffling the queue, create a new `ConcatenatingAudioSource` and use `setAudioSource` on your player object.
+  - See: [#3](https://github.com/Pato05/just_audio_media_kit/issues/3) and [#13](https://github.com/Pato05/just_audio_media_kit/issues/13)
+  - Correct shuffle order implementation is currently implemented in [feat/queue-shuffle](https://github.com/Pato05/just_audio_media_kit/tree/feat/queue-shuffle)
+- `SilenceAudioSource` is currently not supported (issue: [media-kit#28](https://github.com/media-kit/media-kit/issues/28)).
 - The plugin hasn't been tested with multiple player instances, though it should work without any issues.
 
 ## Licensing

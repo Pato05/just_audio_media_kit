@@ -320,6 +320,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     _logger.finest('seek(${request.toMap()})');
     if (request.index != null) {
       await _player.jump(request.index!);
+      if (!_playing) await _player.pause();
     }
 
     final position = request.position;
@@ -404,12 +405,14 @@ class MediaKitPlayer extends AudioPlayerPlatform {
       case final UriAudioSourceMessage uriSource:
         return Media(uriSource.uri, httpHeaders: audioSource.headers);
 
-      case final SilenceAudioSourceMessage silenceSource:
-        // from https://github.com/bleonard252/just_audio_mpv/blob/main/lib/src/mpv_player.dart#L137
-        return Media(
-          'av://lavfi:anullsrc=d=${silenceSource.duration.inMilliseconds}ms',
-          extras: {'overrideDuration': silenceSource.duration},
-        );
+      // removed because it doesn't seem to be actually working.
+      // Related media-kit issue: https://github.com/media-kit/media-kit/issues/28
+      // case final SilenceAudioSourceMessage silenceSource:
+      //   // from https://github.com/bleonard252/just_audio_mpv/blob/main/lib/src/mpv_player.dart#L137
+      //   return Media(
+      //     'av://lavfi:anullsrc=d=${silenceSource.duration.inMilliseconds}ms',
+      //     extras: {'overrideDuration': silenceSource.duration},
+      //   );
 
       case final ClippingAudioSourceMessage clippingSource:
         return Media(clippingSource.child.uri,
