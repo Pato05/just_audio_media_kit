@@ -12,7 +12,7 @@ The installation process has changed, please re-read the install instructions.
 
 ```yaml
 dependencies:
-  just_audio_media_kit: ^2.0.0
+  just_audio_media_kit: ^2.1.0
 
   # Select the native media_kit libs based on your usage:
   # NOTE: if including video libs already, these audio libs aren't necessary.
