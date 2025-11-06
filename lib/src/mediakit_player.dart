@@ -248,19 +248,22 @@ class MediaKitPlayer extends AudioPlayerPlatform {
 
     newVirtualIndex = newVirtualIndex.clamp(0, _playlist!.length);
 
-    // Take [prefetchPlaylistSize] tracks from the playlist and send them to the player.
-    final int endingIndex = (newVirtualIndex + JustAudioMediaKit.prefetchPlaylistSize).clamp(
-      0,
-      _playlist!.length,
-    );
+    // Select the next [prefetchPlaylistSize] that will play, looping back to 0 if in loop mode.
+    List<int> virtualQueue = List.generate(JustAudioMediaKit.prefetchPlaylistSize, (x) => x + newVirtualIndex);
+    if (_player.state.playlistMode == PlaylistMode.loop) {
+      virtualQueue = virtualQueue.map((x) => x % _playlist!.length).toList();
+    } else {
+      virtualQueue = virtualQueue.where((x) => x < _playlist!.length).toList();
+    }
 
     _nativeQueueVirtualOffset = newVirtualIndex;
     List<int> newNativeQueue;
 
     if (_isShuffling) {
-      newNativeQueue = _shuffleOrder.sublist(newVirtualIndex, endingIndex);
+      newNativeQueue = virtualQueue.map((x) => _shuffleOrder[x]).toList();
+      ;
     } else {
-      newNativeQueue = List.generate(endingIndex - newVirtualIndex, (x) => x + newVirtualIndex);
+      newNativeQueue = virtualQueue;
     }
 
     _logger.fine("Setting native queue to $newNativeQueue");
@@ -423,6 +426,8 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   @override
   Future<SetLoopModeResponse> setLoopMode(SetLoopModeRequest request) async {
     await _player.setPlaylistMode(_loopModeToPlaylistMode(request.loopMode));
+
+    await _setNativeQueue(_playingVirtualIndex);
 
     return SetLoopModeResponse();
   }

@@ -54,9 +54,9 @@ class JustAudioMediaKit extends JustAudioPlatform {
 
   /// Max amount of items to prefetch in the playlist.
   ///
-  /// Does nothing, if [prefetchPlaylist] is set to false. Default is 2.
+  /// Does nothing, if [prefetchPlaylist] is set to false. Default is 3.
   /// It is not recommended to change this, because libmpv doesn't prefetch beyond the first upcoming item.
-  static int prefetchPlaylistSize = 2;
+  static int prefetchPlaylistSize = 3;
 
   final _players = HashMap<String, MediaKitPlayer>();
 
