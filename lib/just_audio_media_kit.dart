@@ -16,7 +16,7 @@ class JustAudioMediaKit extends JustAudioPlatform {
   static final _logger = Logger('JustAudioMediaKit');
 
   /// The internal MPV player's logLevel.
-  static MPVLogLevel mpvLogLevel = MPVLogLevel.error;
+  static MPVLogLevel mpvLogLevel = MPVLogLevel.warn;
 
   /// Sets the demuxer's cache size (in bytes).
   static int bufferSize = 32 * 1024 * 1024;
@@ -55,7 +55,7 @@ class JustAudioMediaKit extends JustAudioPlatform {
   /// Max amount of items to prefetch in the playlist.
   ///
   /// Does nothing, if [prefetchPlaylist] is set to false. Default is 2.
-  /// It is not recommended to change this, because libmpv doesn't prefetch more than 2 items.
+  /// It is not recommended to change this, because libmpv doesn't prefetch beyond the first upcoming item.
   static int prefetchPlaylistSize = 2;
 
   final _players = HashMap<String, MediaKitPlayer>();
@@ -96,8 +96,7 @@ class JustAudioMediaKit extends JustAudioPlatform {
   @override
   Future<AudioPlayerPlatform> init(InitRequest request) async {
     if (_players.containsKey(request.id)) {
-      throw PlatformException(
-          code: 'error', message: 'Player ${request.id} already exists!');
+      throw PlatformException(code: 'error', message: 'Player ${request.id} already exists!');
     }
 
     _logger.fine('instantiating new player ${request.id}');
@@ -109,8 +108,7 @@ class JustAudioMediaKit extends JustAudioPlatform {
   }
 
   @override
-  Future<DisposePlayerResponse> disposePlayer(
-      DisposePlayerRequest request) async {
+  Future<DisposePlayerResponse> disposePlayer(DisposePlayerRequest request) async {
     _logger.fine('disposing player ${request.id}');
 
     // temporary workaround because disposePlayer is called more than once
@@ -121,8 +119,7 @@ class JustAudioMediaKit extends JustAudioPlatform {
     }
 
     if (!_players.containsKey(request.id)) {
-      throw PlatformException(
-          code: 'error', message: 'Player ${request.id} doesn\'t exist.');
+      throw PlatformException(code: 'error', message: 'Player ${request.id} doesn\'t exist.');
     }
 
     final future = _players[request.id]!.release();
@@ -136,8 +133,7 @@ class JustAudioMediaKit extends JustAudioPlatform {
   }
 
   @override
-  Future<DisposeAllPlayersResponse> disposeAllPlayers(
-      DisposeAllPlayersRequest request) async {
+  Future<DisposeAllPlayersResponse> disposeAllPlayers(DisposeAllPlayersRequest request) async {
     _logger.fine('disposing of all players...');
     if (_players.isNotEmpty) {
       await Future.wait(_players.values.map((e) => e.release()));
