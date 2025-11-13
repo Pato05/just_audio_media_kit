@@ -56,7 +56,12 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   List<int> _nativeQueueOrder = [];
 
   /// Prevents two copies of [_setNativeQueue] from running at once to prevent conflicting edits to [_nativeQueueOrder]
+  /// Lifecycle should be identical to [_playlistIndexOverride]
   Completer<void>? _nativeQueueLock;
+
+  /// Supplies the playlist index during the period in which the [_player] index and [_nativeQueueOrder] may be desynced
+  /// Lifecycle should be identical to [_nativeQueueLock]
+  int? _playlistIndexOverride;
 
   int? _errorCode;
   String? _errorMessage;
@@ -73,7 +78,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   /// changing the currently playing track.
   int get _playingVirtualIndex {
     if (_nativeQueueOrder.isEmpty) return 0;
-    int playlistIndex = _nativeQueueOrder[_player.state.playlist.index];
+    int playlistIndex = _playlistIndexOverride ?? _nativeQueueOrder[_player.state.playlist.index];
     return _isShuffling ? _shuffleOrder.indexOf(playlistIndex) : playlistIndex;
   }
 
@@ -273,6 +278,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     }
     try {
       _nativeQueueLock = Completer();
+      _playlistIndexOverride = newNativeQueue.isEmpty ? 0 : newNativeQueue[0];
       // If the new current song matches the existing current song and !forcePrefetch, use the queue update algorithm
       // instead of replacing the whole queue.  This avoids interrupting playback of the current track and resetting its
       // play position, but does not result in the new upcoming track being prefetched.
@@ -326,6 +332,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     } finally {
       _nativeQueueLock?.complete();
       _nativeQueueLock = null;
+      _playlistIndexOverride = null;
     }
   }
 
@@ -344,9 +351,11 @@ class MediaKitPlayer extends AudioPlayerPlatform {
       bufferedPosition: _player.state.buffer,
       duration: _duration,
       icyMetadata: null,
-      currentIndex: _nativeQueueOrder.isEmpty || _playlist == null
+      currentIndex: _playlist == null
           ? 0
-          : _nativeQueueOrder[_player.state.playlist.index].clamp(0, _playlist!.length),
+          : (_playlistIndexOverride ??
+                  (_nativeQueueOrder.isEmpty ? 0 : _nativeQueueOrder[_player.state.playlist.index]))
+              .clamp(0, _playlist!.length),
       androidAudioSessionId: null,
       errorCode: _errorCode,
       errorMessage: _errorMessage,
