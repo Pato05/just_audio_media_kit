@@ -287,7 +287,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
         int validUpcomingIndex = 0;
         // Find out how many upcoming tracks match the new queue
         // We can skip 0 as its already been checked
-        for (int i = 1; i < newNativeQueue.length; i++) {
+        for (int i = 1; i < newNativeQueue.length && currentIndex + i < _nativeQueueOrder.length; i++) {
           if (_nativeQueueOrder[currentIndex + i] == newNativeQueue[i]) {
             validUpcomingIndex = currentIndex + i;
           } else {
