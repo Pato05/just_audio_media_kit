@@ -283,7 +283,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
       // instead of replacing the whole queue.  This avoids interrupting playback of the current track and resetting its
       // play position, but does not result in the new upcoming track being prefetched.
       int currentIndex = _player.state.playlist.index;
-      if (!forcePrefetch && _nativeQueueOrder.isNotEmpty && _nativeQueueOrder[currentIndex] == newNativeQueue[0]) {
+      if (!forcePrefetch && _nativeQueueOrder.isNotEmpty && newNativeQueue.isNotEmpty && _nativeQueueOrder[currentIndex] == newNativeQueue[0]) {
         int validUpcomingIndex = 0;
         // Find out how many upcoming tracks match the new queue
         // We can skip 0 as its already been checked
