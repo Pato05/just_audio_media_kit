@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:just_audio_platform_interface/just_audio_platform_interface.dart';
@@ -104,6 +105,11 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     if (start != null) duration -= start;
     return duration;
   }
+
+  /// The playlist index of the last track in the virtual queue.  This is used as the reported playback index when the
+  /// playlist is not empty but the native queue is, which indicates playback has completed.  Using this value instead
+  /// of 0 in that scenario should avoid jumps, as it should always match the last real value reported.
+  int get _completedIndex => _isShuffling ? _shuffleOrder.lastOrNull ?? 0 : max(0, (_playlist?.length ?? 0) - 1);
 
   MediaKitPlayer(super.id) {
     _player = Player(
@@ -278,12 +284,17 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     }
     try {
       _nativeQueueLock = Completer();
-      _playlistIndexOverride = newNativeQueue.isEmpty ? 0 : newNativeQueue[0];
+      // If newNativeQueue is empty, we just completed the playlist with looping disabled.  Continue to use the index
+      // of the last track in the virtual queue to avoid jumps.
+      _playlistIndexOverride = newNativeQueue.isEmpty ? _completedIndex : newNativeQueue[0];
       // If the new current song matches the existing current song and !forcePrefetch, use the queue update algorithm
       // instead of replacing the whole queue.  This avoids interrupting playback of the current track and resetting its
       // play position, but does not result in the new upcoming track being prefetched.
       int currentIndex = _player.state.playlist.index;
-      if (!forcePrefetch && _nativeQueueOrder.isNotEmpty && newNativeQueue.isNotEmpty && _nativeQueueOrder[currentIndex] == newNativeQueue[0]) {
+      if (!forcePrefetch &&
+          _nativeQueueOrder.isNotEmpty &&
+          newNativeQueue.isNotEmpty &&
+          _nativeQueueOrder[currentIndex] == newNativeQueue[0]) {
         int validUpcomingIndex = 0;
         // Find out how many upcoming tracks match the new queue
         // We can skip 0 as its already been checked
@@ -354,7 +365,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
       currentIndex: _playlist == null
           ? 0
           : (_playlistIndexOverride ??
-                  (_nativeQueueOrder.isEmpty ? 0 : _nativeQueueOrder[_player.state.playlist.index]))
+                  (_nativeQueueOrder.isEmpty ? _completedIndex : _nativeQueueOrder[_player.state.playlist.index]))
               .clamp(0, _playlist!.length),
       androidAudioSessionId: null,
       errorCode: _errorCode,
