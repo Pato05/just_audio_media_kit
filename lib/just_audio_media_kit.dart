@@ -48,6 +48,12 @@ class JustAudioMediaKit extends JustAudioPlatform {
   /// [the related issue](https://github.com/Pato05/just_audio_media_kit/issues/11) for more information
   static bool prefetchPlaylist = false;
 
+  /// Path to PEM client certificate file for mTLS.
+  static String? tlsCertFile;
+
+  /// Path to PEM private key file for mTLS.
+  static String? tlsKeyFile;
+
   static final _logger = Logger('JustAudioMediaKit');
   final _players = HashMap<String, MediaKitPlayer>();
 
