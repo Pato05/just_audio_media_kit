@@ -132,6 +132,9 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     if (JustAudioMediaKit.tlsKeyFile != null) {
       setProperty(_player, 'tls-key-file', JustAudioMediaKit.tlsKeyFile!);
     }
+    if (JustAudioMediaKit.nullBackend) {
+      setProperty(_player, 'ao', 'null');
+    }
 
     _streamSubscriptions = [
       _player.stream.duration.listen((duration) {

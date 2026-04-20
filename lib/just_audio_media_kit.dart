@@ -52,6 +52,10 @@ class JustAudioMediaKit extends JustAudioPlatform {
   /// [prefetchPlaylistSize] can be changed to set the amount of items to prefetch.
   static bool prefetchPlaylist = false;
 
+  /// Switches MPV to use a null backend with no output.
+  /// Useful for running tests in CI without audio drivers.
+  static bool nullBackend = false;
+
   /// Max amount of items to prefetch in the playlist.
   ///
   /// Does nothing, if [prefetchPlaylist] is set to false. Default is 3.
