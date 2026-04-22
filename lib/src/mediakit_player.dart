@@ -396,6 +396,9 @@ class MediaKitPlayer extends AudioPlayerPlatform {
       _playlist = [playable];
     }
 
+    // Mark all native tracks as invalid due to new playlist
+    _nativeQueueOrder = _nativeQueueOrder.map((_) => -1).toList();
+
     final requestIndex = request.initialIndex ?? 0;
     await _setNativeQueue(_isShuffling ? _shuffleOrder.indexOf(requestIndex) : requestIndex);
 
