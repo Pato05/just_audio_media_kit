@@ -126,6 +126,12 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     if (JustAudioMediaKit.prefetchPlaylist) {
       setProperty(_player, 'prefetch-playlist', 'yes');
     }
+    if (JustAudioMediaKit.tlsCertFile != null) {
+      setProperty(_player, 'tls-cert-file', JustAudioMediaKit.tlsCertFile!);
+    }
+    if (JustAudioMediaKit.tlsKeyFile != null) {
+      setProperty(_player, 'tls-key-file', JustAudioMediaKit.tlsKeyFile!);
+    }
 
     _streamSubscriptions = [
       _player.stream.duration.listen((duration) {

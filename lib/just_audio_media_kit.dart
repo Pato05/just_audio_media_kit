@@ -58,6 +58,12 @@ class JustAudioMediaKit extends JustAudioPlatform {
   /// It is not recommended to change this, because libmpv doesn't prefetch beyond the first upcoming item.
   static int prefetchPlaylistSize = 3;
 
+  /// Path to PEM client certificate file for mTLS.
+  static String? tlsCertFile;
+
+  /// Path to PEM private key file for mTLS.
+  static String? tlsKeyFile;
+
   final _players = HashMap<String, MediaKitPlayer>();
 
   /// Players that are disposing (player id -> future that completes when the player is disposed)
