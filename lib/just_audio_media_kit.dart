@@ -48,6 +48,25 @@ class JustAudioMediaKit extends JustAudioPlatform {
   /// [the related issue](https://github.com/Pato05/just_audio_media_kit/issues/11) for more information
   static bool prefetchPlaylist = false;
 
+  /// Maximum mpv `volume` value, expressed as a multiplier (1.0 = 100% =
+  /// mpv default; 1.3 = 130% = mpv's own default cap; 2.0 = 200% =
+  /// typical "boost" target). Set BEFORE [ensureInitialized]. Applied to
+  /// every player created after the assignment via the [Player]
+  /// constructor's `setProperty('volume-max', ...)` call.
+  ///
+  /// Default 1.3 matches mpv's documented default so unmodified
+  /// consumers see no behavior change.
+  static double volumeMax = 1.3;
+
+  /// Optional mpv `audio-filters` chain applied to every player at
+  /// construction time. Format: see mpv's audio-filters docs (lavfi
+  /// passthrough is common, e.g. `'lavfi=[acompressor=...]'`).
+  ///
+  /// Set BEFORE [ensureInitialized] to apply at startup, OR call
+  /// [setMpvProperty]`('audio-filters', filters)` at runtime to swap
+  /// on an existing player. Null leaves the default chain (no filters).
+  static String? audioFilters;
+
   static final _logger = Logger('JustAudioMediaKit');
   final _players = HashMap<String, MediaKitPlayer>();
 
@@ -82,6 +101,32 @@ class JustAudioMediaKit extends JustAudioPlatform {
   /// Registers the plugin with [JustAudioPlatform]
   static void registerWith() {
     JustAudioPlatform.instance = JustAudioMediaKit._();
+  }
+
+  /// Set an mpv property on every active [MediaKitPlayer]. Useful for
+  /// runtime swaps of properties like `audio-filters` that are not in the
+  /// static config block (or that need to change after init).
+  ///
+  /// Iterates the internal player map and calls each player's
+  /// [MediaKitPlayer.setMpvProperty]. No-op if no players are active or if
+  /// [JustAudioPlatform.instance] has not been registered as
+  /// [JustAudioMediaKit] (e.g., in a unit test environment without a
+  /// platform init).
+  ///
+  /// `just_audio.AudioPlayer._id` is private with no public getter,
+  /// which is why this is an iteration over all players rather than a
+  /// per-player lookup by ID. For single-player consumers (the typical
+  /// case), this is correct. For multi-player consumers, it applies the
+  /// same property to every player — which is the right semantic for
+  /// `audio-filters` (the chain applies to whatever player is rendering)
+  /// and for `volume-max` (a per-player ceiling that should usually be
+  /// uniform across an app).
+  static Future<void> setMpvProperty(String key, dynamic value) async {
+    final instance = JustAudioPlatform.instance;
+    if (instance is! JustAudioMediaKit) return;
+    for (final player in instance._players.values) {
+      await player.setMpvProperty(key, value);
+    }
   }
 
   @override

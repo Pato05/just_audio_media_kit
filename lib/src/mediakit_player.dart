@@ -63,6 +63,18 @@ class MediaKitPlayer extends AudioPlayerPlatform {
       setProperty(_player, 'prefetch-playlist', 'yes');
     }
 
+    // Volume Boost v2 — apply static config to mpv. Like the
+    // prefetch-playlist call above, these are not awaited; mpv applies
+    // them opportunistically as it processes the property queue.
+    setProperty(
+      _player,
+      'volume-max',
+      (JustAudioMediaKit.volumeMax * 100).toString(),
+    );
+    if (JustAudioMediaKit.audioFilters != null) {
+      setProperty(_player, 'audio-filters', JustAudioMediaKit.audioFilters!);
+    }
+
     _streamSubscriptions = [
       _player.stream.duration.listen((duration) {
         if (_currentMedia?.extras?['overrideDuration'] != null) return;
@@ -284,6 +296,14 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     return _player
         .setVolume(request.volume * 100.0)
         .then((value) => SetVolumeResponse());
+  }
+
+  /// Set an arbitrary mpv property on the underlying [Player] at runtime.
+  /// Useful for properties not in the static [JustAudioMediaKit] config
+  /// block. Delegates to the internal [setProperty] helper used by
+  /// `prefetch-playlist` and `volume-max`.
+  Future<void> setMpvProperty(String key, dynamic value) async {
+    await setProperty(_player, key, value);
   }
 
   @override
