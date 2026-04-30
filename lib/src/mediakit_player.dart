@@ -240,7 +240,9 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     int nativeIndex = _player.state.playlist.index;
     if (nativeIndex == 0) {
       // We should be in the transition between tracks 0 and 1.  This is the expected timing.
-      assert(_position + const Duration(seconds: 1) > _duration);
+      // Note that this check will fail on corrupted audio tracks which complete before the full duration plays out.
+      // Therefore this sanity check is only valid while debugging and cannot be assumed to be true in production.
+      assert(_position + const Duration(seconds: 1) > _duration, "Position $_position duration $_duration");
       return await _setNativeQueue(_nativeQueueVirtualOffset! + 1, forcePrefetch: true);
     } else if (nativeIndex == 1 && _position < const Duration(seconds: 1)) {
       _logger.warning("_advanceNativeQueue called after playback of next track has already started");
@@ -301,7 +303,8 @@ class MediaKitPlayer extends AudioPlayerPlatform {
           _nativeQueueOrder.isNotEmpty &&
           newNativeQueue.isNotEmpty &&
           _nativeQueueOrder[currentIndex] == newNativeQueue[0]) {
-        int validUpcomingIndex = 0;
+        int validUpcomingIndex = currentIndex;
+
         // Find out how many upcoming tracks match the new queue
         // We can skip 0 as its already been checked
         for (int i = 1; i < newNativeQueue.length && currentIndex + i < _nativeQueueOrder.length; i++) {
@@ -319,7 +322,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
           await _player.remove(validUpcomingIndex + 1);
         }
         // Add new tracks that weren't matched
-        for (int i = validUpcomingIndex + 1; i < newNativeQueue.length; i++) {
+        for (int i = validUpcomingIndex + 1 - currentIndex; i < newNativeQueue.length; i++) {
           _nativeQueueOrder.add(newNativeQueue[i]);
           await _player.add(_playlist![newNativeQueue[i]]);
         }
@@ -340,9 +343,11 @@ class MediaKitPlayer extends AudioPlayerPlatform {
         );
       }
       // Assert _nativeQueueOrder matches newNativeQueue
-      assert(_nativeQueueOrder.length == newNativeQueue.length);
+      assert(_nativeQueueOrder.length == newNativeQueue.length,
+          "Expected $newNativeQueue actual $_nativeQueueOrder} current $currentIndex");
       for (int i = 0; i < newNativeQueue.length; i++) {
-        assert(newNativeQueue[i] == _nativeQueueOrder[i]);
+        assert(newNativeQueue[i] == _nativeQueueOrder[i],
+            "Expected $newNativeQueue actual $_nativeQueueOrder current $currentIndex");
         // _player queue state does not seem to immediately update, so we can't verify it
         //assert(_playlist![_nativeQueueOrder[i]].uri == _player.state.playlist.medias[i].uri);
       }
