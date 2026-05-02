@@ -283,7 +283,6 @@ class MediaKitPlayer extends AudioPlayerPlatform {
 
     if (_isShuffling) {
       newNativeQueue = virtualQueue.map((x) => _shuffleOrder[x]).toList();
-      ;
     } else {
       newNativeQueue = virtualQueue;
     }
@@ -531,6 +530,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
 
   @override
   Future<ConcatenatingInsertAllResponse> concatenatingInsertAll(ConcatenatingInsertAllRequest request) async {
+    // request.id is ignored because we only support loading one ConcatenatingAudioSource at once
     _logger.fine('concatenatingInsertAll(${request.toMap()})');
 
     _shuffleOrder = request.shuffleOrder;
@@ -553,6 +553,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
 
   @override
   Future<ConcatenatingRemoveRangeResponse> concatenatingRemoveRange(ConcatenatingRemoveRangeRequest request) async {
+    // request.id is ignored because we only support loading one ConcatenatingAudioSource at once
     _logger.fine('concatenatingRemoveRange(${request.toMap()})');
     assert(_playlist != null);
 
@@ -578,6 +579,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
 
   @override
   Future<ConcatenatingMoveResponse> concatenatingMove(request) async {
+    // request.id is ignored because we only support loading one ConcatenatingAudioSource at once
     _logger.fine('concatenatingMove(${request.toMap()})');
     assert(_playlist != null);
 
