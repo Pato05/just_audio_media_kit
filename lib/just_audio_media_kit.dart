@@ -13,10 +13,12 @@ import 'package:universal_platform/universal_platform.dart';
 class JustAudioMediaKit extends JustAudioPlatform {
   JustAudioMediaKit._();
 
-  /// The internal MPV player's logLevel
-  static MPVLogLevel mpvLogLevel = MPVLogLevel.error;
+  static final _logger = Logger('JustAudioMediaKit');
 
-  /// Sets the demuxer's cache size (in bytes)
+  /// The internal MPV player's logLevel.
+  static MPVLogLevel mpvLogLevel = MPVLogLevel.warn;
+
+  /// Sets the demuxer's cache size (in bytes).
   static int bufferSize = 32 * 1024 * 1024;
 
   /// Sets the name of the underlying window & process for native backend. This is visible inside the Windows' volume mixer.
@@ -40,13 +42,25 @@ class JustAudioMediaKit extends JustAudioPlatform {
   /// This uses `scaletempo` under the hood & disables `audio-pitch-correction`.
   static bool pitch = true;
 
-  /// Enables gapless playback via the [`--prefetch-playlist`](https://mpv.io/manual/stable/#options-prefetch-playlist) in libmpv
+  /// Enables gapless playback via the [`--prefetch-playlist`](https://mpv.io/manual/stable/#options-prefetch-playlist) in libmpv.
   ///
   /// This is highly experimental. Use at your own risk.
   ///
   /// Check [mpv's docs](https://mpv.io/manual/stable/#options-prefetch-playlist) and
-  /// [the related issue](https://github.com/Pato05/just_audio_media_kit/issues/11) for more information
+  /// [the related issue](https://github.com/Pato05/just_audio_media_kit/issues/11) for more information.
+  ///
+  /// [prefetchPlaylistSize] can be changed to set the amount of items to prefetch.
   static bool prefetchPlaylist = false;
+
+  /// Switches MPV to use a null backend with no output.
+  /// Useful for running tests in CI without audio drivers.
+  static bool nullBackend = false;
+
+  /// Max amount of items to prefetch in the playlist.
+  ///
+  /// Does nothing, if [prefetchPlaylist] is set to false. Default is 3.
+  /// It is not recommended to change this, because libmpv doesn't prefetch beyond the first upcoming item.
+  static int prefetchPlaylistSize = 3;
 
   /// Path to PEM client certificate file for mTLS.
   static String? tlsCertFile;
@@ -54,7 +68,6 @@ class JustAudioMediaKit extends JustAudioPlatform {
   /// Path to PEM private key file for mTLS.
   static String? tlsKeyFile;
 
-  static final _logger = Logger('JustAudioMediaKit');
   final _players = HashMap<String, MediaKitPlayer>();
 
   /// Players that are disposing (player id -> future that completes when the player is disposed)
@@ -63,7 +76,7 @@ class JustAudioMediaKit extends JustAudioPlatform {
   /// Initializes the plugin if the platform we're running on is marked
   /// as true, otherwise it will leave everything unchanged.
   ///
-  /// Can also be safely called from Web, even though it'll have no effect
+  /// Can also be safely called from Web, even though it'll have no effect.
   static void ensureInitialized({
     bool linux = true,
     bool windows = true,
@@ -93,8 +106,7 @@ class JustAudioMediaKit extends JustAudioPlatform {
   @override
   Future<AudioPlayerPlatform> init(InitRequest request) async {
     if (_players.containsKey(request.id)) {
-      throw PlatformException(
-          code: 'error', message: 'Player ${request.id} already exists!');
+      throw PlatformException(code: 'error', message: 'Player ${request.id} already exists!');
     }
 
     _logger.fine('instantiating new player ${request.id}');
@@ -106,8 +118,7 @@ class JustAudioMediaKit extends JustAudioPlatform {
   }
 
   @override
-  Future<DisposePlayerResponse> disposePlayer(
-      DisposePlayerRequest request) async {
+  Future<DisposePlayerResponse> disposePlayer(DisposePlayerRequest request) async {
     _logger.fine('disposing player ${request.id}');
 
     // temporary workaround because disposePlayer is called more than once
@@ -118,8 +129,7 @@ class JustAudioMediaKit extends JustAudioPlatform {
     }
 
     if (!_players.containsKey(request.id)) {
-      throw PlatformException(
-          code: 'error', message: 'Player ${request.id} doesn\'t exist.');
+      throw PlatformException(code: 'error', message: 'Player ${request.id} doesn\'t exist.');
     }
 
     final future = _players[request.id]!.release();
@@ -133,8 +143,7 @@ class JustAudioMediaKit extends JustAudioPlatform {
   }
 
   @override
-  Future<DisposeAllPlayersResponse> disposeAllPlayers(
-      DisposeAllPlayersRequest request) async {
+  Future<DisposeAllPlayersResponse> disposeAllPlayers(DisposeAllPlayersRequest request) async {
     _logger.fine('disposing of all players...');
     if (_players.isNotEmpty) {
       await Future.wait(_players.values.map((e) => e.release()));
