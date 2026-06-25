@@ -268,14 +268,21 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   Future<void> _setNativeQueue(int newVirtualIndex, {bool forcePrefetch = false}) async {
     if (_playlist == null) return;
 
-    newVirtualIndex = max(0, newVirtualIndex) % _playlist!.length;
+    List<int> virtualQueue;
 
-    // Select the next [prefetchPlaylistSize] that will play, looping back to 0 if in loop mode.
-    List<int> virtualQueue = List.generate(JustAudioMediaKit.prefetchPlaylistSize, (x) => x + newVirtualIndex);
-    if (_player.state.playlistMode == PlaylistMode.loop) {
-      virtualQueue = virtualQueue.map((x) => x % _playlist!.length).toList();
+    if (_playlist!.isEmpty) {
+      newVirtualIndex = 0;
+      virtualQueue = [];
     } else {
-      virtualQueue = virtualQueue.where((x) => x < _playlist!.length).toList();
+      newVirtualIndex = max(0, newVirtualIndex) % _playlist!.length;
+
+      // Select the next [prefetchPlaylistSize] that will play, looping back to 0 if in loop mode.
+      virtualQueue = List.generate(JustAudioMediaKit.prefetchPlaylistSize, (x) => x + newVirtualIndex);
+      if (_player.state.playlistMode == PlaylistMode.loop) {
+        virtualQueue = virtualQueue.map((x) => x % _playlist!.length).toList();
+      } else {
+        virtualQueue = virtualQueue.where((x) => x < _playlist!.length).toList();
+      }
     }
 
     _nativeQueueVirtualOffset = newVirtualIndex;
