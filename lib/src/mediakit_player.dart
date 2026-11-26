@@ -59,6 +59,10 @@ class MediaKitPlayer extends AudioPlayerPlatform {
       ready: () => _readyCompleter.complete(),
     ));
 
+    // mpv loads a .lrc or subtitle file with the song's name next to it, and
+    // when it can't read one the whole load fails. just_audio only plays audio
+    setProperty(_player, 'sub-auto', 'no');
+
     if (JustAudioMediaKit.prefetchPlaylist) {
       setProperty(_player, 'prefetch-playlist', 'yes');
     }
