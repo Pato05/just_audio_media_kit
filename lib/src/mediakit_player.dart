@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/services.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:just_audio_platform_interface/just_audio_platform_interface.dart';
 import 'package:logging/logging.dart';
@@ -35,6 +36,7 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   int? _errorCode;
   String? _errorMessage;
   Completer<Duration?>? _loadCompleter;
+  String? _loadingUri;
 
   /// The index that's currently playing
   int _currentIndex = 0;
@@ -153,6 +155,16 @@ class MediaKitPlayer extends AudioPlayerPlatform {
           _errorMessage = error;
           _updatePlaybackEvent();
         }
+        // fail a pending load, or it waits forever for a song that can't open
+        final load = _loadCompleter;
+        if (errorUri != null &&
+            errorUri == _loadingUri &&
+            load != null &&
+            !load.isCompleted) {
+          load.completeError(
+            PlatformException(code: '$kErrorCode', message: error),
+          );
+        }
         _logger.severe('ERROR OCCURRED: $error');
       }),
       _player.stream.playlist.listen((playlist) {
@@ -248,12 +260,14 @@ class MediaKitPlayer extends AudioPlayerPlatform {
       final playable = Playlist(
           audioSource.children.map(_convertAudioSourceIntoMediaKit).toList(),
           index: _currentIndex);
+      _loadingUri = playable.medias[_currentIndex].uri;
 
       await _player.open(playable, play: _playing);
     } else {
       final playable =
           _convertAudioSourceIntoMediaKit(request.audioSourceMessage);
       _logger.finest('playable is ${playable.toString()}');
+      _loadingUri = playable.uri;
       await _player.open(playable, play: _playing);
     }
     _mediaOpened = true;
