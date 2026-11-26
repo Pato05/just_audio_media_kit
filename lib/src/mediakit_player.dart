@@ -148,7 +148,11 @@ class MediaKitPlayer extends AudioPlayerPlatform {
         _updatePlaybackEvent();
       }),
       _player.stream.error.listen((error) {
-        final errorUri = RegExp(r'Failed to open (.*)\.').firstMatch(error)?[1];
+        // on windows mpv gets local songs as \\?\C:\..., which its error
+        // repeats, while media.uri keeps them as C:/...
+        final errorUri = RegExp(r'Failed to open (?:\\\\\?\\)?(.*)\.')
+            .firstMatch(error)?[1]
+            ?.replaceAll(r'\', '/');
         if (errorUri == null || errorUri == _currentMedia?.uri) {
           _processingState = ProcessingStateMessage.idle;
           _errorCode = kErrorCode;
